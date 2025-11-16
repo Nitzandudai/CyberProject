@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap');
+
+body {
+    font-family: 'Amatic SC', cursive;
+    direction: rtl;
+    text-align: center;
+    margin-top: 80px;
+    background: url('img/login_photo.jpg') no-repeat center center fixed;
+    background-size: cover;
+
+}
+
+.login-container {
+    position: absolute;
+    top: 140px;
+    right: 80px;
+    width: 300px;
+}
