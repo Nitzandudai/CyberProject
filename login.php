@@ -1,5 +1,5 @@
 <?php
-// רשימת משתמשים וסיסמאות (במקום מסד נתונים)
+//users and passwords list (instead of database)
 $users = [
     "carlos" => "1234",
     "admin" => "admin123",
@@ -8,7 +8,7 @@ $users = [
     "yael"  => "abcd"
 ];
 
-// בדיקה אם נשלח טופס
+// checking if the form was submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST["username"];
     $password = $_POST["password"];
@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } elseif ($users[$username] !== $password) {
         $error = "Invalid password";
     } else {
-        // התחברות מוצלחת – נשמור את השם ב-session ונעבור לדף הבא
+        //Successful login – save the name in session and go to the next page
         session_start();
         $_SESSION["username"] = $username;
         header("Location: home.php");
@@ -27,23 +27,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 <!DOCTYPE html>
-<html lang="he">
+<html lang="EN">
 <head>
     <meta charset="UTF-8">
-    <title>התחברות</title>
+    <title>login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles.css?v=2">
 
-    <!-- בלי style inline, כל העיצוב בקובץ החיצוני -->
-    <link rel="stylesheet" href="assets/styles.css">
+   <!-- <link rel="stylesheet" href="assets/styles.css">  -->
 </head>
-<body>
+<body class="login-page">
 
     <div class="login-container">
-        <h1>דף התחברות</h1>
+        <h1>login</h1>
 
         <form method="POST">
-            <input type="text" name="username" placeholder="שם משתמש" required><br>
-            <input type="password" name="password" placeholder="סיסמה" required><br>
-            <button type="submit">התחבר</button>
+            <input type="text" name="username" placeholder="username" required><br>
+            <input type="password" name="password" placeholder="password" required><br>
+            <button type="submit">login</button>
         </form>
 
         <?php if (isset($error)) echo "<p class='error'>$error</p>"; ?>
