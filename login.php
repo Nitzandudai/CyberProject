@@ -12,15 +12,17 @@ try {
 $error = "";
 $success_msg = "";
 
-// Login logic
+// לוגיקת Login
+// --- גרסה פגיעה ל-SQL Injection ---
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login_submit'])) {
     $username = $_POST["username"];
     $password = $_POST["password"];
 
-    // Authenticate user by verifying username and password against the database
-    $stmt = $db->prepare("SELECT * FROM users WHERE username = :u AND password = :p");
-    $stmt->execute([':u' => $username, ':p' => $password]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    // שים לב: אנחנו משרשרים את המשתנים ישירות לתוך המחרוזת!
+    $sql = "SELECT * FROM users WHERE username = '$username' AND password = '$password'";
+    
+    // הרצה ישירה בלי prepare אמיתי של פרמטרים
+    $user = $db->query($sql)->fetch(PDO::FETCH_ASSOC);
 
     if ($user) {
         $_SESSION["username"] = $user['username'];
