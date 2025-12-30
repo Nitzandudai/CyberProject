@@ -1,4 +1,8 @@
 <?php
+// בדיקה אם נשלח מזהה סשן ב-URL, ואם כן - שימוש בו
+if (isset($_GET['PHPSESSID'])) {
+    session_id($_GET['PHPSESSID']);
+}
 session_start();
 
 // 1. חיבור למסד הנתונים

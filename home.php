@@ -1,60 +1,72 @@
 <?php
+/* SESSION FIXATION VULNERABILITY:
+   Check if a PHPSESSID is provided via URL. 
+   This allows the attacker to "fix" the session ID for the victim.
+*/
+if (isset($_GET['PHPSESSID'])) {
+    session_id($_GET['PHPSESSID']);
+}
+
 session_start();
-if (!isset($_SESSION["username"])) { header("Location: login.php"); exit; }
+
+/* AUTHENTICATION CHECK: 
+   Redirect to login page if the session 'username' is not set.
+*/
+if (!isset($_SESSION["username"])) { 
+    header("Location: login.php"); 
+    exit; 
+}
+
+/* Initialize the shopping cart session if it doesn't exist */
 $_SESSION["cart"] = $_SESSION["cart"] ?? [];
 
-// Add to cart (from home page)
+/* Handle "Add to Cart" form submissions */
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["add_id"])) {
-  $id = (int)$_POST["add_id"];
-  $_SESSION["cart"][$id] = ($_SESSION["cart"][$id] ?? 0) + 1;
-  header("Location: home.php"); // refresh so the number updates
-  exit;
+    $id = (int)$_POST["add_id"];
+    $_SESSION["cart"][$id] = ($_SESSION["cart"][$id] ?? 0) + 1;
+    header("Location: home.php");
+    exit;
 }
 
-// Load "Deals" products from SQLite DB
-$db = new PDO('sqlite:' . __DIR__ . '/app.db');
-$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+/* DATABASE LOGIC: Connect to SQLite and fetch weekly deals */
+try {
+    $db = new PDO('sqlite:' . __DIR__ . '/app.db');
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-/*
-  מביאים רק מוצרים שיש להם מבצע פעיל בטבלת deals
-  (עם בדיקת start_date/end_date אם קיימים)
-*/
-$rows = $db->query("
-  SELECT
-    p.id,
-    p.name,
-    p.price AS original_price,
-    d.deal_price AS deal_price,
-    p.image,
-    d.end_date
-  FROM products p
-  JOIN deals d ON d.product_id = p.id
-  WHERE d.is_active = 1
-    AND (d.start_date IS NULL OR d.start_date <= DATE('now'))
-    AND (d.end_date  IS NULL OR d.end_date  >= DATE('now'))
-  ORDER BY RANDOM()
-  LIMIT 6
-")->fetchAll(PDO::FETCH_ASSOC);
+    /* Fetch only active deals from the products and deals tables */
+    $rows = $db->query("
+      SELECT
+        p.id, p.name, p.price AS original_price,
+        d.deal_price AS deal_price, p.image, d.end_date
+      FROM products p
+      JOIN deals d ON d.product_id = p.id
+      WHERE d.is_active = 1
+        AND (d.start_date IS NULL OR d.start_date <= DATE('now'))
+        AND (d.end_date  IS NULL OR d.end_date  >= DATE('now'))
+      ORDER BY RANDOM()
+      LIMIT 6
+    ")->fetchAll(PDO::FETCH_ASSOC);
 
-// להפוך למבנה שהעמוד כבר מצפה לו: $dealProducts[id] = ["name","price","img","badge"]
-$dealProducts = [];
-foreach ($rows as $r) {
-    $id = (int)$r['id'];
+    $dealProducts = [];
+    foreach ($rows as $r) {
+        $id = (int)$r['id'];
+        $badge = "Weekly Deal";
+        if (!empty($r["end_date"])) {
+            $badge = "Until " . $r["end_date"];
+        }
 
-    // תג מבצע פשוט (אפשר לשנות טקסט איך שבא לך)
-    $badge = "מבצע השבוע";
-    if (!empty($r["end_date"])) {
-        $badge = "עד " . $r["end_date"];
+        $dealProducts[$id] = [
+            "name"  => $r["name"],
+            "price" => (float)$r["deal_price"],
+            "img"   => $r["image"],
+            "badge" => $badge,
+        ];
     }
-
-    $dealProducts[$id] = [
-        "name"  => $r["name"],
-        "price" => (float)$r["deal_price"], // מחיר מבצע להצגה
-        "img"   => $r["image"],
-        "badge" => $badge,
-    ];
+} catch (PDOException $e) {
+    die("Database Connection Error: " . $e->getMessage());
 }
 
+/* Calculate total items in the cart */
 $cartCount = array_sum($_SESSION["cart"]);
 ?>
 <!DOCTYPE html>
@@ -65,13 +77,17 @@ $cartCount = array_sum($_SESSION["cart"]);
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
   <link rel="stylesheet" href="assets/styles.css?v=1">
-  <title>דף הבית</title>
+  <title>Home Page - Anan Super Market</title>
 </head>
 
 <body class="home-page">
-    <img class="corner-logo" src="assets/images/logo.jpg" alt="לוגו הסופר שלי">
+    
+  <div style="background: #f4f4f4; text-align: right; padding: 8px 25px; font-size: 14px; color: #5C9B81; border-bottom: 1px solid #ddd; font-family: 'Inter', sans-serif;">
+      Logged in as: <strong><?php echo htmlspecialchars($_SESSION['username']); ?></strong>
+  </div>
+
+  <img class="corner-logo" src="assets/images/logo.jpg" alt="Logo">
 
 <header class="site-header">
   <div class="topbar">
@@ -109,36 +125,36 @@ $cartCount = array_sum($_SESSION["cart"]);
   <section class="hero">
     <div class="hero-box">
       <h2>DEALS OF THE WEEK</h2>
-      <p>
-        <div class="products-grid">
-          <?php foreach ($dealProducts as $id => $p): ?>
-            <article class="product-card">
-              <?php if (!empty($p["badge"])): ?>
-                <div class="badge"><?php echo htmlspecialchars($p["badge"]); ?></div>
-              <?php endif; ?>
+      <div class="products-grid">
+        <?php foreach ($dealProducts as $id => $p): ?>
+          <article class="product-card">
+            <?php if (!empty($p["badge"])): ?>
+              <div class="badge"><?php echo htmlspecialchars($p["badge"]); ?></div>
+            <?php endif; ?>
 
-              <div class="product-img">
-                <img src="<?php echo htmlspecialchars($p["img"]); ?>"
-                     alt="<?php echo htmlspecialchars($p["name"]); ?>">
-              </div>
+            <div class="product-img">
+              <img src="<?php echo htmlspecialchars($p["img"]); ?>"
+                   alt="<?php echo htmlspecialchars($p["name"]); ?>">
+            </div>
 
-              <div class="product-body">
-                <div class="product-name"><?php echo htmlspecialchars($p["name"]); ?></div>
-                <div class="product-price"><?php echo number_format((float)$p["price"], 2); ?> ₪</div>
-                <button type="button">Add to cart</button>
-              </div>
-            </article>
-          <?php endforeach; ?>
-        </div>
-      </p>
+            <div class="product-body">
+              <div class="product-name"><?php echo htmlspecialchars($p["name"]); ?></div>
+              <div class="product-price"><?php echo number_format((float)$p["price"], 2); ?> ₪</div>
+              <form method="POST" action="home.php" style="margin:0;">
+                  <input type="hidden" name="add_id" value="<?php echo $id; ?>">
+                  <button type="submit">Add to cart</button>
+              </form>
+            </div>
+          </article>
+        <?php endforeach; ?>
+      </div>
     </div>
   </section>
 
   <section class="section">
-    <h2>Recommanded Products</h2>
+    <h2>Recommended Products</h2>
     <div class="products-grid">
-      <!-- כאן תמשיכי עם כרטיסי מוצרים -->
-    </div>
+      </div>
   </section>
 </main>
 
