@@ -12,12 +12,12 @@ try {
 $error = "";
 $success_msg = "";
 
-// Login logic
+// לוגיקת Login
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login_submit'])) {
     $username = $_POST["username"];
     $password = $_POST["password"];
 
-    // Authenticate user by verifying username and password against the database
+    // שאילתה לבדיקת המשתמש
     $stmt = $db->prepare("SELECT * FROM users WHERE username = :u AND password = :p");
     $stmt->execute([':u' => $username, ':p' => $password]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);

@@ -2,6 +2,7 @@
 session_start();
 if (!isset($_SESSION["username"])) { header("Location: login.php"); exit; }
 $_SESSION["cart"] = $_SESSION["cart"] ?? [];
+
 // Add to cart (from home page)
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["add_id"])) {
   $id = (int)$_POST["add_id"];
@@ -9,27 +10,50 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["add_id"])) {
   header("Location: home.php"); // refresh so the number updates
   exit;
 }
-// Count items in cart
+
 // Load "Deals" products from SQLite DB
 $db = new PDO('sqlite:' . __DIR__ . '/app.db');
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-// כרגע אין לנו טבלת "מבצעים", אז נציג פשוט את 6 המוצרים הראשונים מה-DB
-$rows = $db->query("SELECT id, name, price, image FROM products ORDER BY id ASC LIMIT 6")
-           ->fetchAll(PDO::FETCH_ASSOC);
+/*
+  מביאים רק מוצרים שיש להם מבצע פעיל בטבלת deals
+  (עם בדיקת start_date/end_date אם קיימים)
+*/
+$rows = $db->query("
+  SELECT
+    p.id,
+    p.name,
+    p.price AS original_price,
+    d.deal_price AS deal_price,
+    p.image,
+    d.end_date
+  FROM products p
+  JOIN deals d ON d.product_id = p.id
+  WHERE d.is_active = 1
+    AND (d.start_date IS NULL OR d.start_date <= DATE('now'))
+    AND (d.end_date  IS NULL OR d.end_date  >= DATE('now'))
+  ORDER BY RANDOM()
+  LIMIT 6
+")->fetchAll(PDO::FETCH_ASSOC);
 
 // להפוך למבנה שהעמוד כבר מצפה לו: $dealProducts[id] = ["name","price","img","badge"]
 $dealProducts = [];
 foreach ($rows as $r) {
     $id = (int)$r['id'];
+
+    // תג מבצע פשוט (אפשר לשנות טקסט איך שבא לך)
+    $badge = "מבצע השבוע";
+    if (!empty($r["end_date"])) {
+        $badge = "עד " . $r["end_date"];
+    }
+
     $dealProducts[$id] = [
         "name"  => $r["name"],
-        "price" => (float)$r["price"],
+        "price" => (float)$r["deal_price"], // מחיר מבצע להצגה
         "img"   => $r["image"],
-        "badge" => null, // אפשר להשאיר בלי תג מבצע בשלב הזה
+        "badge" => $badge,
     ];
 }
-
 
 $cartCount = array_sum($_SESSION["cart"]);
 ?>
@@ -49,22 +73,20 @@ $cartCount = array_sum($_SESSION["cart"]);
 <body class="home-page">
     <img class="corner-logo" src="assets/images/logo.jpg" alt="לוגו הסופר שלי">
 
-
 <header class="site-header">
   <div class="topbar">
     <form class="search-form" action="products.php" method="GET">
       <input type="text" name="q" placeholder="Search products or brands" />
-     <button type="submit">Search</button>
-
+      <button type="submit">Search</button>
     </form>
 
     <nav class="toplinks">
       <a href="home.php">Home Page</a>
       <a href="products.php">All Products</a>
       <a class="cart-link" href="cart.php">
-      <span class="cart-icon">🛒</span>
-      My Cart (<?php echo (int)$cartCount; ?>)
-        </a>
+        <span class="cart-icon">🛒</span>
+        My Cart (<?php echo (int)$cartCount; ?>)
+      </a>
       <a href="profile.php">Personal Details</a>
       <form method="POST" action="logout.php" style="display:inline; margin:0;">
         <button type="submit" class="linklike">Log Out</button>
@@ -87,27 +109,28 @@ $cartCount = array_sum($_SESSION["cart"]);
   <section class="hero">
     <div class="hero-box">
       <h2>DEALS OF THE WEEK</h2>
-      <p><div class="products-grid">
-  <?php foreach ($dealProducts as $p): ?>
-    <article class="product-card">
-      <?php if (!empty($p["badge"])): ?>
-        <div class="badge"><?php echo htmlspecialchars($p["badge"]); ?></div>
-      <?php endif; ?>
+      <p>
+        <div class="products-grid">
+          <?php foreach ($dealProducts as $id => $p): ?>
+            <article class="product-card">
+              <?php if (!empty($p["badge"])): ?>
+                <div class="badge"><?php echo htmlspecialchars($p["badge"]); ?></div>
+              <?php endif; ?>
 
-      <div class="product-img">
-        <img src="<?php echo htmlspecialchars($p["img"]); ?>"
-             alt="<?php echo htmlspecialchars($p["name"]); ?>">
-      </div>
+              <div class="product-img">
+                <img src="<?php echo htmlspecialchars($p["img"]); ?>"
+                     alt="<?php echo htmlspecialchars($p["name"]); ?>">
+              </div>
 
-      <div class="product-body">
-        <div class="product-name"><?php echo htmlspecialchars($p["name"]); ?></div>
-        <div class="product-price"><?php echo number_format((float)$p["price"], 2); ?> ₪</div>
-        <button type="button">Add to cart</button>
-      </div>
-    </article>
-  <?php endforeach; ?>
-</div>
-</p>
+              <div class="product-body">
+                <div class="product-name"><?php echo htmlspecialchars($p["name"]); ?></div>
+                <div class="product-price"><?php echo number_format((float)$p["price"], 2); ?> ₪</div>
+                <button type="button">Add to cart</button>
+              </div>
+            </article>
+          <?php endforeach; ?>
+        </div>
+      </p>
     </div>
   </section>
 
