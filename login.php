@@ -1,7 +1,13 @@
 <?php
-// בדיקה אם נשלח מזהה סשן ב-URL, ואם כן - שימוש בו
+/* 1. SESSION FIXATION VULNERABILITY:
+   We sanitize the session ID and set it if provided via GET.
+*/
 if (isset($_GET['PHPSESSID'])) {
-    session_id($_GET['PHPSESSID']);
+    // Keep only alphanumeric characters to prevent "illegal characters" error
+    $sid = preg_replace('/[^a-zA-Z0-9]/', '', $_GET['PHPSESSID']);
+    if (!empty($sid)) {
+        session_id($sid);
+    }
 }
 session_start();
 
