@@ -10,17 +10,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["add_id"])) {
   exit;
 }
 // Count items in cart
-$cartCount = array_sum($_SESSION["cart"]);
+// Load "Deals" products from SQLite DB
+$db = new PDO('sqlite:' . __DIR__ . '/app.db');
+$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-// Deals products (we can control what appears here)
-$dealProducts = [
-2002 =>  ["name" => "Oat Milk", "price" => 10.50, "img" => "assets/images/productsImg/dairyAndEggs/shibolen.jpg", "badge" => "20% OFF"],
-3001 =>  ["name" => "Wine for Heroes", "price" => 49.90, "img" => "assets/images/productsImg/alcohol/winrforHeros copy.png", "badge" => "In the memorial of the heroes of the war"],
-7001 =>  ["name" => "Bamba", "price" => 3.90, "img" => "assets/images/productsImg/snacksAndDryP/bamba.jpg", "badge" => "2 for 5"],
-1001 =>  ["name" => "Banana", "price" => 7.90, "img" => "assets/images/productsImg/fruitsAndVegs/banana.jpg", "badge" => "2 Kilos for 10"],
-2001 =>  ["name" => "Organic Eggs", "price" => 17.90, "img" => "assets/images/productsImg/dairyAndEggs/organicEggs.jpg", "badge" => "10% OFF"],
-1010 =>  ["name" => "Pink Lady Apple", "price" => 9.90, "img" => "assets/images/productsImg/fruitsAndVegs/pinkLadyApple.jpg", "badge" => "15% OFF"],
-];
+// כרגע אין לנו טבלת "מבצעים", אז נציג פשוט את 6 המוצרים הראשונים מה-DB
+$rows = $db->query("SELECT id, name, price, image FROM products ORDER BY id ASC LIMIT 6")
+           ->fetchAll(PDO::FETCH_ASSOC);
+
+// להפוך למבנה שהעמוד כבר מצפה לו: $dealProducts[id] = ["name","price","img","badge"]
+$dealProducts = [];
+foreach ($rows as $r) {
+    $id = (int)$r['id'];
+    $dealProducts[$id] = [
+        "name"  => $r["name"],
+        "price" => (float)$r["price"],
+        "img"   => $r["image"],
+        "badge" => null, // אפשר להשאיר בלי תג מבצע בשלב הזה
+    ];
+}
+
 
 $cartCount = array_sum($_SESSION["cart"]);
 ?>

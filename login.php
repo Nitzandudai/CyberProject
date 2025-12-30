@@ -1,13 +1,13 @@
 <?php
 session_start();
 
-// רשימת המשתמשים המעודכנת (עם אימייל לצורך הניסוי)
-$users = [
-    "carlos" => ["pw" => "1234", "email" => "carlos@example.com"],
-    "admin"  => ["pw" => "admin123", "email" => "admin@example.com"],
-    "noa"    => ["pw" => "pass1", "email" => "noa@example.com"],
-    "dan"    => ["pw" => "qwerty", "email" => "dan@example.com"]
-];
+// 1. חיבור למסד הנתונים
+try {
+    $db = new PDO('sqlite:' . __DIR__ . '/app.db');
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
 
 $error = "";
 $success_msg = "";
@@ -17,8 +17,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login_submit'])) {
     $username = $_POST["username"];
     $password = $_POST["password"];
 
-    if (isset($users[$username]) && $users[$username]["pw"] === $password) {
-        $_SESSION["username"] = $username;
+    // שאילתה לבדיקת המשתמש
+    $stmt = $db->prepare("SELECT * FROM users WHERE username = :u AND password = :p");
+    $stmt->execute([':u' => $username, ':p' => $password]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($user) {
+        $_SESSION["username"] = $user['username'];
         header("Location: home.php");
         exit;
     } else {
@@ -26,21 +31,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login_submit'])) {
     }
 }
 
-// לוגיקת Forgot Password (החלק הפגיע)
+// לוגיקת Forgot Password
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['forgot_submit'])) {
     $email_input = $_POST['email'];
-    foreach ($users as $name => $data) {
-        if ($data['email'] === $email_input) {
-            // שמירת המידע ב-Session כדי שדף המייל יוכל להציג אותו
-            $_SESSION['temp_mail_to'] = $name;
-            $_SESSION['temp_mail_address'] = $email_input;
-            
-            // מעבר לדף ה"מייל" המזויף
-            header("Location: mailbox.php");
-            exit;
-        }
+
+    // בדיקה ב-DB אם האימייל קיים
+    $stmt = $db->prepare("SELECT username FROM users WHERE email = :email");
+    $stmt->execute([':email' => $email_input]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($user) {
+        $_SESSION['temp_mail_to'] = $user['username'];
+        $_SESSION['temp_mail_address'] = $email_input;
+        header("Location: mailbox.php");
+        exit;
+    } else {
+        $error = "Email not found";
     }
-    if (!$user_found) $error = "Email not found";
 }
 ?>
 <!DOCTYPE html>
@@ -69,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['forgot_submit'])) {
         </div>
 
         <?php if (isset($_GET['view']) && $_GET['view'] == 'forgot'): ?>
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
                 <h3>Reset Password</h3>
                 <form method="POST">
                     <input type="email" name="email" placeholder="enter email" required><br>
@@ -79,8 +86,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['forgot_submit'])) {
         <?php endif; ?>
 
         <?php if ($error) echo "<p style='color: #ef4444; margin-top: 10px;'>$error</p>"; ?>
-        <?php if ($success_msg) echo "<p style='color: #22c55e; margin-top: 10px;'>$success_msg</p>"; ?>
     </div>
-
 </body>
 </html>

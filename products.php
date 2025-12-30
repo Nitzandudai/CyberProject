@@ -14,25 +14,45 @@ $categories = [
 ];
 
 
-$products = [
-  101 => ["name"=>"Tomato", "price"=>9.90,  "cat"=>"fruits_veg", "img"=>"assets/images/productsImg/fruitsAndVegs/tomato.jpg"],
-  102 => ["name"=>"Cucumber", "price"=>6.90,"cat"=>"fruits_veg", "img"=>"assets/images/productsImg/fruitsAndVegs/cucumber.jpg"],
+// --- Load products from SQLite DB (instead of hardcoded array) ---
+$db = new PDO('sqlite:' . __DIR__ . '/app.db');
+$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-  201 => ["name"=>"Milk 3%", "price"=>6.50, "cat"=>"dairy_eggs", "img"=>"assets/images/productsImg/dairyAndEggs/shibolen.jpg"],
-  202 => ["name"=>"Organic Eggs", "price"=>17.90,"cat"=>"dairy_eggs", "img"=>"assets/images/productsImg/dairyAndEggs/organicEggs.jpg"],
+$selectedCat = is_string($_GET["cat"] ?? "") ? ($_GET["cat"] ?? "") : "";
+$q = trim($_GET["q"] ?? "");
 
-  301 => ["name"=>"Pasta", "price"=>7.90, "cat"=>"snacks_dry", "img"=>"assets/images/productsImg/snacksAndDry/pasta.jpg"],
-  302 => ["name"=>"Bamba", "price"=>3.90, "cat"=>"snacks_dry", "img"=>"assets/images/productsImg/snacksAndDry/bamba.jpg"],
+// Build query safely (no string concatenation)
+$sql = "SELECT id, name, price, category, image FROM products WHERE 1=1";
+$params = [];
 
-  401 => ["name"=>"Fresh Chicken", "price"=>34.90, "cat"=>"meat_fish", "img"=>"assets/images/productsImg/meatAndFish/chicken.jpg"],
-  402 => ["name"=>"Salmon", "price"=>79.90, "cat"=>"meat_fish", "img"=>"assets/images/productsImg/meatAndFish/salmon.jpg"],
+if ($selectedCat !== "") {
+  $sql .= " AND category = :cat";
+  $params[":cat"] = $selectedCat;
+}
+if ($q !== "") {
+  $sql .= " AND name LIKE :q";
+  $params[":q"] = "%" . $q . "%";
+}
 
-  501 => ["name"=>"Frozen Pizza", "price"=>19.90, "cat"=>"frozen", "img"=>"assets/images/productsImg/frozen/pizza.jpg"],
+$sql .= " ORDER BY name ASC";
 
-  601 => ["name"=>"Coke 1.5L", "price"=>8.90, "cat"=>"soft_drink", "img"=>"assets/images/productsImg/softDrinks/cola.jpg"],
+$stmt = $db->prepare($sql);
+$stmt->execute($params);
+$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-  701 => ["name"=>"Beer (6 pack)", "price"=>29.90, "cat"=>"alcohol", "img"=>"assets/images/productsImg/alcohol/beer.jpg"],
-];
+// Convert DB rows to the same structure your code expects ($products[id] = [...])
+$products = [];
+foreach ($rows as $r) {
+  $id = (int)$r["id"];
+  $products[$id] = [
+    "name" => $r["name"],
+    "price" => (float)$r["price"],
+    "cat" => $r["category"],
+    "img" => $r["image"],
+  ];
+}
+// --- end DB load ---
+
 
 $selectedCat = is_string($_GET["cat"] ?? "") ? ($_GET["cat"] ?? "") : "";
 $q = trim($_GET["q"] ?? "");
