@@ -22,16 +22,16 @@ try {
 $error = "";
 $success_msg = "";
 
-// לוגיקת Login
-// --- גרסה פגיעה ל-SQL Injection ---
+// Login logic
+// sql injection vulnerability here
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login_submit'])) {
     $username = $_POST["username"];
     $password = $_POST["password"];
 
-    // שים לב: אנחנו משרשרים את המשתנים ישירות לתוך המחרוזת!
+    // change the query to be vulnerable to SQL injection
     $sql = "SELECT * FROM users WHERE username = '$username' AND password = '$password'";
     
-    // הרצה ישירה בלי prepare אמיתי של פרמטרים
+    // execute the query
     $user = $db->query($sql)->fetch(PDO::FETCH_ASSOC);
 
     if ($user) {
@@ -43,11 +43,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login_submit'])) {
     }
 }
 
-// לוגיקת Forgot Password
+// forgot password logic
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['forgot_submit'])) {
     $email_input = $_POST['email'];
 
-    // בדיקה ב-DB אם האימייל קיים
+    // look for the email in the database
     $stmt = $db->prepare("SELECT username FROM users WHERE email = :email");
     $stmt->execute([':email' => $email_input]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
