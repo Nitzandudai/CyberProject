@@ -1,32 +1,31 @@
 <?php
 session_start();
 
-// 1. התחברות למסד הנתונים הקיים שלך (זה שמכיל גם את הירקות)
+// connect to the database
 try {
-    $db = new PDO('sqlite:' . __DIR__ . '/app.db'); // ודאי שזה השם המדויק של הקובץ שלך
+    $db = new PDO('sqlite:' . __DIR__ . '/app.db'); 
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     die("Connection failed: " . $e->getMessage());
 }
 
-// 2. קבלת שם המשתמש מה-URL (כאן נמצא ה-IDOR)
+//getting the user to reset from the URL (IDOR)
 $user_to_reset = $_GET['user'] ?? null; //if the user doesnt exist return null
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && $user_to_reset) {
     $new_password = $_POST['new_password'];
 
-    // 3. עדכון הסיסמה בטבלת המשתמשים
-    // שימי לב: אנחנו מעדכנים את המשתמש שמופיע ב-URL בלי לבדוק מי המשתמש המחובר!
+    // update the password in the database
     $sql = "UPDATE users SET password = :new_pw WHERE username = :user_name";
     $stmt = $db->prepare($sql);
     
     try {
         $stmt->execute([':new_pw' => $new_password, ':user_name' => $user_to_reset]);
-        // בדיקה אם השאילתה באמת השפיעה על שורה בטבלה
+        //check if any row was actually updated
         if ($stmt->rowCount() > 0) {
             $message = "The password for <strong>" . htmlspecialchars($user_to_reset) . "</strong> has been updated!";
         } else {
-            // אם rowCount הוא 0, זה אומר ששם המשתמש מה-URL לא נמצא ב-DB
+            // if no rows were updated, the user might not exist
             $message = "Error: User <strong>" . htmlspecialchars($user_to_reset) . "</strong> not found in the database.";
         }
     } catch (PDOException $e) {

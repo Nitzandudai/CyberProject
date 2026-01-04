@@ -33,35 +33,40 @@ try {
     $db = new PDO('sqlite:' . __DIR__ . '/app.db');
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    /* Fetch only active deals from the products and deals tables */
-    $rows = $db->query("
-      SELECT
-        p.id, p.name, p.price AS original_price,
-        d.deal_price AS deal_price, p.image, d.end_date
-      FROM products p
-      JOIN deals d ON d.product_id = p.id
-      WHERE d.is_active = 1
-        AND (d.start_date IS NULL OR d.start_date <= DATE('now'))
-        AND (d.end_date  IS NULL OR d.end_date  >= DATE('now'))
-      ORDER BY RANDOM()
-      LIMIT 6
-    ")->fetchAll(PDO::FETCH_ASSOC);
+    /* Deals of the week (DB-style: query -> rows -> build $dealProducts) */
+$rows = $db->query("
+  SELECT
+    d.product_id AS id,
+    d.name,
+    p.price AS original_price,
+    d.deal_price,
+    d.image,
+    d.badge
+  FROM (
+    SELECT 2002 AS product_id, 'Oat Milk'        AS name, 10.50 AS deal_price, 'assets/images/productsImg/dairyAndEggs/shibolen.jpg'             AS image, '20% OFF' AS badge
+    UNION ALL SELECT 3001, 'Wine for Heroes'     AS name, 49.90 AS deal_price, 'assets/images/productsImg/alcohol/winrforHeros.jpg'         AS image, 'In the memorial of the heroes of the war' AS badge
+    UNION ALL SELECT 7001, 'Bamba'              AS name,  3.90 AS deal_price, 'assets/images/productsImg/snacksAndDryP/bamba.jpg'                AS image, '2 for 5' AS badge
+    UNION ALL SELECT 1001, 'Banana'             AS name,  7.90 AS deal_price, 'assets/images/productsImg/fruitsAndVegs/banana.jpg'               AS image, '2 Kilos for 10' AS badge
+    UNION ALL SELECT 2001, 'Organic Eggs'       AS name, 17.90 AS deal_price, 'assets/images/productsImg/dairyAndEggs/organicEggs.jpg'           AS image, '10% OFF' AS badge
+    UNION ALL SELECT 1010, 'Pink Lady Apple'    AS name,  9.90 AS deal_price, 'assets/images/productsImg/fruitsAndVegs/pinkLadyApple.jpg'        AS image, '15% OFF' AS badge
+  ) d
+  LEFT JOIN products p ON p.id = d.product_id
+  ORDER BY RANDOM()
+  LIMIT 6
+")->fetchAll(PDO::FETCH_ASSOC);
 
-    $dealProducts = [];
-    foreach ($rows as $r) {
-        $id = (int)$r['id'];
-        $badge = "Weekly Deal";
-        if (!empty($r["end_date"])) {
-            $badge = "Until " . $r["end_date"];
-        }
+$dealProducts = [];
+foreach ($rows as $r) {
+    $id = (int)$r['id'];
 
-        $dealProducts[$id] = [
-            "name"  => $r["name"],
-            "price" => (float)$r["deal_price"],
-            "img"   => $r["image"],
-            "badge" => $badge,
-        ];
-    }
+    $dealProducts[$id] = [
+        "name"  => $r["name"],
+        "price" => (float)$r["deal_price"],
+        "img"   => $r["image"],
+        "badge" => $r["badge"],
+    ];
+}
+
 } catch (PDOException $e) {
     die("Database Connection Error: " . $e->getMessage());
 }
