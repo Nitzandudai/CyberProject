@@ -1,4 +1,7 @@
 <?php
+
+header("X-XSS-Protection: 0"); // Disable built-in XSS protection to allow for XSS exploitation
+
 /* SESSION FIXATION VULNERABILITY:
    Check if a PHPSESSID is provided via URL. 
    This allows the attacker to "fix" the session ID for the victim.
@@ -125,6 +128,18 @@ $cartCount = array_sum($_SESSION["cart"]);
     <a class="cat" href="products.php?cat=alcohol">🍺 Alcohol</a>
   </div>
 </header>
+
+</div> </header> <div style="background: #fff3cd; padding: 15px; text-align: center; border-bottom: 1px solid #ffeeba; color: #856404; font-family: 'Inter', sans-serif;">
+    <?php 
+    if (isset($_GET['msg'])) {
+        echo "Notification: " . $_GET['msg']; // XSS PoC: Inject scripts via 'msg' parameter
+    } else {
+        echo "Welcome back to Anan Super Market!";
+    }
+    ?>
+</div>
+
+<main class="container"> ```
 
 <main class="container">
   <section class="hero">

