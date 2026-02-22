@@ -74,7 +74,7 @@ $cartCount = array_sum($_SESSION["cart"]);
 <body class="home-page">
     
   <div style="background: #f4f4f4; text-align: right; padding: 8px 25px; font-size: 14px; color: #5C9B81; border-bottom: 1px solid #ddd;">
-      Logged in as: <strong><?php echo htmlspecialchars($_SESSION['username']); ?></strong>
+      Logged in as: <strong><?php echo $_SESSION['username']; ?></strong>
   </div>
 
   <img class="corner-logo" src="assets/images/logo.jpg" alt="Logo">
