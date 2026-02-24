@@ -1,0 +1,217 @@
+/* ========== Fonts ========== */
+/* אם כבר הוספת <link> לפונט ב-HTML אפשר למחוק את ה-@import */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+/* ========== Theme ========== */
+:root{
+  --primary:#2563eb;
+  --text:#0f172a;
+  --muted:#475569;
+  --border:#e2e8f0;
+  --bg:#f4f6f8;
+  --card:#ffffff;
+}
+
+/* ========== Base ========== */
+*{ box-sizing:border-box; }
+
+html, body{ height:100%; }
+
+body{
+  margin:0;
+  direction:ltr;
+  font-family:"Inter", Arial, system-ui, sans-serif;
+  color:#0f172a;
+  background:#f4f6f8;
+}
+
+
+a{
+  color:var(--primary);
+  text-decoration:none;
+  font-weight:600;
+}
+a:hover{ text-decoration:underline; }
+
+button{
+  font-family:inherit;
+  /* margin-top: 16px; */
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--text);
+  padding:6px 14px;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:600;
+}
+button:hover{ filter:brightness(0.97); }
+
+/* ========== Layout helpers ========== */
+.container{
+  max-width:1200px;
+  margin:0 auto;
+  padding:16px;
+}
+
+/* ========== Page backgrounds ========== */
+/* Login page background */
+body.login-page{
+  text-align:center;
+  margin-top:80px;
+  background: url("images/login_photo.png") no-repeat center center fixed;
+  background-size: cover;
+}
+
+/* Home page background (your image with logo on the side) */
+body.home-page{
+  background-color:#f2efe6;
+  background-image:url("images/home-bg.jpg");
+  background-repeat:no-repeat;
+  background-position: top 16px left 16px;
+  background-size: 360px auto;
+}
+
+/* ========== Login page box ========== */
+.login-container{
+  position: absolute;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1.1);
+
+  width: 420px;
+  padding: 30px;
+  border-radius: 18px;
+}
+
+/* ========== Header / Navbar ========== */
+.site-header{
+  position:sticky;
+  padding-left: 290px; 
+  top: 5px;
+  z-index:50;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(6px);
+  border-bottom:1px solid #e6e8eb;
+}
+/* search button */
+.topbar{
+  max-width:1200px;
+  margin:1px;
+  padding-left: 290px;  
+  display:flex;
+  gap: 12px;;
+  align-items:center;
+}
+
+
+ /* Leave space for the corner logo (desktop) */
+.site-header .topbar{
+  padding-left: 290px;
+} 
+
+.toplinks{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  white-space:nowrap;
+}
+
+.linklike{
+  border:0;
+  background:transparent;
+  cursor:pointer;
+  color:var(--primary);
+  font:inherit;
+  padding:0;
+}
+
+/* Search */
+.search-form{
+  flex:1;
+  display:flex;
+  gap: 12px;
+  max-width: 620px;
+  margin: 0;
+}
+.search-form input{
+  width:100%;
+  padding:12px;
+  border:1px solid #d9dde2;
+  border-radius:12px;
+  background:#f8fafc;
+}
+.search-form button{
+  background:var(--primary);
+  color:#fff;
+  border-color:var(--primary);
+}
+.search-form button:hover{ filter:brightness(0.95); }
+
+/* ========== Categories strip ========== */
+.categories-strip{
+  max-width:1200px;
+  margin:0 auto;
+  padding:10px 16px 14px;
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+}
+.cat{
+  flex:0 0 auto;
+  padding:10px 12px;
+  border:1px solid #e6e8eb;
+  border-radius:14px;
+  background:#fff;
+}
+
+/* ========== Home sections ========== */
+.hero{ margin-top:16px; }
+.hero-box{
+  background:var(--card);
+  border:1px solid #e6e8eb;
+  border-radius:18px;
+  padding:18px;
+}
+
+.section{ margin-top:18px; }
+
+.products-grid{
+  margin-top:10px;
+  display:grid;
+  grid-template-columns: repeat(6, minmax(0,1fr));
+  gap:12px;
+}
+
+.product-card{ position:relative; background:#fff; border:1px solid #e6e8eb; border-radius:16px; overflow:hidden; }
+.product-img{ height:120px; background:#f8fafc; display:flex; align-items:center; justify-content:center; }
+.product-img img{ max-height:100px; max-width:90%; object-fit:contain; }
+.product-body{ padding:12px; display:flex; flex-direction:column; gap:8px; }
+.badge{ position:absolute; top:10px; left:10px; background:#ef4444; color:#fff; padding:6px 10px; border-radius:999px; font-size:12px; }
+
+
+/* ========== Corner logo image ========== */
+.corner-logo{
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  width: 240px;
+  height: auto;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* ========== Responsive ========== */
+@media (max-width:1100px){
+  .products-grid{ grid-template-columns: repeat(4,1fr); }
+}
+
+@media (max-width:760px){
+  .topbar{ flex-direction:column; align-items:stretch; }
+  .products-grid{ grid-template-columns: repeat(2,1fr); }
+
+  /* On mobile, don't reserve space for the logo */
+  .site-header .topbar{ padding-left:16px; }
+
+  /* Make the logo smaller on mobile */
+  .corner-logo{ width: 160px; }
+}
