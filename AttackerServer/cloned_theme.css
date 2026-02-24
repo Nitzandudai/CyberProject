@@ -1,5 +1,4 @@
 /* ========== Fonts ========== */
-/* אם כבר הוספת <link> לפונט ב-HTML אפשר למחוק את ה-@import */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
 /* ========== Theme ========== */
@@ -14,7 +13,6 @@
 
 /* ========== Base ========== */
 *{ box-sizing:border-box; }
-
 html, body{ height:100%; }
 
 body{
@@ -25,7 +23,6 @@ body{
   background:#f4f6f8;
 }
 
-
 a{
   color:var(--primary);
   text-decoration:none;
@@ -35,7 +32,6 @@ a:hover{ text-decoration:underline; }
 
 button{
   font-family:inherit;
-  /* margin-top: 16px; */
   border:1px solid var(--border);
   background:#fff;
   color:var(--text);
@@ -54,7 +50,6 @@ button:hover{ filter:brightness(0.97); }
 }
 
 /* ========== Page backgrounds ========== */
-/* Login page background */
 body.login-page{
   text-align:center;
   margin-top:80px;
@@ -62,7 +57,6 @@ body.login-page{
   background-size: cover;
 }
 
-/* Home page background (your image with logo on the side) */
 body.home-page{
   background-color:#f2efe6;
   background-image:url("images/home-bg.jpg");
@@ -77,7 +71,6 @@ body.home-page{
   top: 55%;
   left: 50%;
   transform: translate(-50%, -50%) scale(1.1);
-
   width: 420px;
   padding: 30px;
   border-radius: 18px;
@@ -93,36 +86,13 @@ body.home-page{
   backdrop-filter: blur(6px);
   border-bottom:1px solid #e6e8eb;
 }
-/* search button */
 .topbar{
   max-width:1200px;
   margin:1px;
   padding-left: 290px;  
   display:flex;
-  gap: 12px;;
+  gap: 12px;
   align-items:center;
-}
-
-
- /* Leave space for the corner logo (desktop) */
-.site-header .topbar{
-  padding-left: 290px;
-} 
-
-.toplinks{
-  display:flex;
-  gap:12px;
-  align-items:center;
-  white-space:nowrap;
-}
-
-.linklike{
-  border:0;
-  background:transparent;
-  cursor:pointer;
-  color:var(--primary);
-  font:inherit;
-  padding:0;
 }
 
 /* Search */
@@ -145,36 +115,8 @@ body.home-page{
   color:#fff;
   border-color:var(--primary);
 }
-.search-form button:hover{ filter:brightness(0.95); }
 
-/* ========== Categories strip ========== */
-.categories-strip{
-  max-width:1200px;
-  margin:0 auto;
-  padding:10px 16px 14px;
-  display:flex;
-  gap:10px;
-  overflow-x:auto;
-}
-.cat{
-  flex:0 0 auto;
-  padding:10px 12px;
-  border:1px solid #e6e8eb;
-  border-radius:14px;
-  background:#fff;
-}
-
-/* ========== Home sections ========== */
-.hero{ margin-top:16px; }
-.hero-box{
-  background:var(--card);
-  border:1px solid #e6e8eb;
-  border-radius:18px;
-  padding:18px;
-}
-
-.section{ margin-top:18px; }
-
+/* ========== Grid System ========== */
 .products-grid{
   margin-top:10px;
   display:grid;
@@ -182,14 +124,6 @@ body.home-page{
   gap:12px;
 }
 
-.product-card{ position:relative; background:#fff; border:1px solid #e6e8eb; border-radius:16px; overflow:hidden; }
-.product-img{ height:120px; background:#f8fafc; display:flex; align-items:center; justify-content:center; }
-.product-img img{ max-height:100px; max-width:90%; object-fit:contain; }
-.product-body{ padding:12px; display:flex; flex-direction:column; gap:8px; }
-.badge{ position:absolute; top:10px; left:10px; background:#ef4444; color:#fff; padding:6px 10px; border-radius:999px; font-size:12px; }
-
-
-/* ========== Corner logo image ========== */
 .corner-logo{
   position: fixed;
   top: 14px;
@@ -200,18 +134,67 @@ body.home-page{
   pointer-events: none;
 }
 
-/* ========== Responsive ========== */
-@media (max-width:1100px){
-  .products-grid{ grid-template-columns: repeat(4,1fr); }
+/* ========================================= */
+/* עיצובים ייעודיים של דף הקופון (Attacker)  */
+/* ========================================= */
+
+/* התיקון החשוב: זה יפעל רק אם תוסיפי class="phishing-page" ל-body */
+body.phishing-page {
+    background-color: #f2efe6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
 }
 
-@media (max-width:760px){
-  .topbar{ flex-direction:column; align-items:stretch; }
-  .products-grid{ grid-template-columns: repeat(2,1fr); }
+.success-container {
+    background: white;
+    padding: 40px 60px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+    text-align: center;
+    max-width: 600px;
+    border: 1px solid #dee2e6;
+}
 
-  /* On mobile, don't reserve space for the logo */
-  .site-header .topbar{ padding-left:16px; }
+.logo-img {
+    max-width: 280px; 
+    height: auto;
+    margin-bottom: 20px;
+}
 
-  /* Make the logo smaller on mobile */
-  .corner-logo{ width: 160px; }
+.coupon-code {
+    font-weight: 900;
+    font-size: 1.8rem;
+    color: #1e40af;
+    background: #f8fafc;
+    padding: 10px 25px;
+    margin: 15px 0;
+    border: 2px dashed #2563eb;
+    display: inline-block;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+}
+
+.btn-exit {
+    display: inline-block;
+    margin-top: 30px;
+    padding: 14px 40px;
+    background-color: #475569;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+}
+
+.notice-box {
+    background: #f1f5f9;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 25px 0;
+    border-left: 4px solid #2563eb;
+    text-align: left;
 }

