@@ -11,6 +11,7 @@ $categories = [
   "frozen"     => "Frozen",
   "soft_drink" => "Soft Drinks",
   "alcohol"    => "Alcohol",
+  "electronics"=> "Electrical Appliances",
 ];
 
 // --- חיבור למסד הנתונים ---
@@ -103,7 +104,11 @@ $pageTitle = ($selectedCat && isset($categories[$selectedCat])) ? $categories[$s
             <img src="<?php echo htmlspecialchars($p["img"]); ?>" onerror="this.src='assets/images/placeholder.jpg'">
           </div>
           <div class="product-body">
-            <div class="product-name"><?php echo htmlspecialchars($p["name"]); ?></div>
+            <div class="product-name">
+              <a href="product_view.php?id=<?php echo $id; ?>" style="color: inherit; text-decoration: none;">
+                  <?php echo htmlspecialchars($p["name"]); ?>
+              </a>
+          </div>
             <div class="product-price"><?php echo $p["price"]; ?> ₪</div>
             <form method="POST">
               <input type="hidden" name="add_id" value="<?php echo $id; ?>">
