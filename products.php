@@ -59,7 +59,12 @@ foreach ($rows as $r) {
 // לוגיקת הוספה לסל (נשארת רגילה)
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["add_id"])) {
     $add_id = (int)$_POST["add_id"];
-    $_SESSION["cart"][$add_id] = ($_SESSION["cart"][$add_id] ?? 0) + 1;
+    
+    // קריאת הכמות מהטופס, אם לא נשלחה כמות (כמו בדף הראשי) ברירת המחדל היא 1
+    $qty = isset($_POST["qty"]) ? (int)$_POST["qty"] : 1;
+    
+    $_SESSION["cart"][$add_id] = ($_SESSION["cart"][$add_id] ?? 0) + $qty;
+    
     header("Location: products.php" . (isset($_SERVER['QUERY_STRING']) ? "?" . $_SERVER['QUERY_STRING'] : ""));
     exit;
 }

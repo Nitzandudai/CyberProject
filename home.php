@@ -95,10 +95,11 @@ $cartCount = array_sum($_SESSION["cart"]);
   </div>
 
   <div class="categories-strip">
-    <a class="cat" href="products.php?cat=fruits_veg">🥬 Fruits and Vegtables</a>
-    <a class="cat" href="products.php?cat=dairy_eggs">🥛 Dairy and Eggs</a>
-    <a class="cat" href="products.php?cat=snacks_dry">🍪 Snacks and Dry Products</a>
-    <a class="cat" href="products.php?cat=meat_fish">🐟 Meat and Fish</a>
+      <a class="cat" href="products.php?cat=fruits_veg">🥬 Fruits and Vegetables</a>
+      <a class="cat" href="products.php?cat=dairy_eggs">🥛 Dairy and Eggs</a>
+      <a class="cat" href="products.php?cat=snacks_dry">🍪 Snacks and Dry Products</a>
+      <a class="cat" href="products.php?cat=meat_fish">🐟 Meat and Fish</a>
+      <a class="cat" href="products.php?cat=electronics">🔌 Electrical Appliances</a>
   </div>
 </header>
 
