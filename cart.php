@@ -7,8 +7,29 @@ $_SESSION["cart"] = $_SESSION["cart"] ?? [];
 $db = new PDO('sqlite:' . __DIR__ . '/app.db');
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+// --- לוגיקת קופונים ---
+$coupon_msg = "";
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["apply_coupon"])) {
+    $code_input = $_POST["coupon_code"] ?? "";
+    
+    // התיקון: אנחנו משתמשים ב-CAST כדי להפוך את הטקסט מהמשתמש ל-BLOB לצורך ההשוואה
+    $stmt = $db->prepare("SELECT discount_val FROM internal_coupons WHERE encrypted_code = CAST(? AS BLOB)");
+    $stmt->execute([$code_input]);
+    $coupon = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($coupon) {
+        $_SESSION["discount_rate"] = (int)$coupon["discount_val"];
+        $coupon_msg = "<span style='color:green;'>Coupon Applied: " . $_SESSION["discount_rate"] . "% OFF!</span>";
+    } else {
+        unset($_SESSION["discount_rate"]);
+        $coupon_msg = "<span style='color:red;'>Invalid Coupon Code.</span>";
+    }
+}
+$current_discount = $_SESSION["discount_rate"] ?? 0;
+// -----------------------
+
 /* Handle cart actions */
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
+if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST["apply_coupon"])) {
     $action = $_POST["action"] ?? "";
     $id = isset($_POST["id"]) ? (int)$_POST["id"] : 0;
     if ($action === "inc" && $id) { $_SESSION["cart"][$id] = ($_SESSION["cart"][$id] ?? 0) + 1; }
@@ -47,7 +68,7 @@ if (!empty($ids)) {
 }
 
 $items = [];
-$total = 0.0;
+$subtotal = 0.0;
 
 foreach ($_SESSION["cart"] as $id => $qty) {
     $qty = (int)$qty;
@@ -60,22 +81,17 @@ foreach ($_SESSION["cart"] as $id => $qty) {
     $dealPrice = $p["deal_price"];
 
     if ($p["is_deal"] && $dealQty > 1 && $qty >= $dealQty) {
-        // המשתמש זכאי למבצע (למשל 2 ב-5)
         $sets = floor($qty / $dealQty); 
         $remainder = $qty % $dealQty;
         $lineTotal = ($sets * $dealPrice) + ($remainder * $originalPrice);
-        
-        $displayUnitPrice = $dealPrice / $dealQty; // מחיר ממוצע ליחידה במבצע
-        $showDealBadge = true;
+        $displayUnitPrice = $dealPrice / $dealQty;
     } else {
-        // אין מבצע (או כי הכמות נמוכה מדי, או כי זה מבצע מחיר פשוט)
         $priceToUse = $p["is_deal"] && $dealQty == 1 ? $dealPrice : $originalPrice;
         $lineTotal = $priceToUse * $qty;
         $displayUnitPrice = $priceToUse;
-        $showDealBadge = ($p["is_deal"] && $dealQty == 1); // הצג רק אם זה מבצע הנחה פשוט
     }
 
-    $total += $lineTotal;
+    $subtotal += $lineTotal;
     $items[] = [
         "id"      => (int)$id,
         "name"    => $p["name"],
@@ -86,6 +102,10 @@ foreach ($_SESSION["cart"] as $id => $qty) {
         "is_deal" => $p["is_deal"]
     ];
 }
+
+// חישוב הנחה סופי
+$discount_amount = ($subtotal * $current_discount) / 100;
+$final_total = $subtotal - $discount_amount;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -98,7 +118,10 @@ foreach ($_SESSION["cart"] as $id => $qty) {
     .cart-table{ width:100%; border-collapse:collapse; }
     .cart-table td, .cart-table th{ padding:12px; border-bottom:1px solid #eef2f6; text-align:left; }
     .sale-badge { color: #ef4444; font-size: 0.75em; font-weight: 800; display: block; }
-    .total{ font-size:18px; font-weight:800; }
+    .total-area { padding:20px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: flex-start; }
+    .total-label { font-size:18px; font-weight:800; }
+    .final-price { font-size: 24px; font-weight: 800; color: #1e293b; }
+    .discount-line { color: #ef4444; font-weight: 600; }
   </style>
 </head>
 <body class="home-page">
@@ -129,11 +152,7 @@ foreach ($_SESSION["cart"] as $id => $qty) {
                 </td>
                 <td>
                     <?php echo number_format($it["price"], 2); ?> ₪
-                    <?php 
-                      // הצגת התווית רק אם הכמות בסל גדולה או שווה לכמות המבצע
-                      // או אם זה מבצע הנחה פשוט (שבו deal_qty הוא 1)
-                      if ($it["is_deal"] && $it["qty"] >= $productsById[$it["id"]]["deal_qty"]): 
-                    ?>
+                    <?php if ($it["is_deal"] && $it["qty"] >= $productsById[$it["id"]]["deal_qty"]): ?>
                         <span class="sale-badge">DEAL APPLIED</span>
                     <?php endif; ?>
                 </td>
@@ -148,8 +167,23 @@ foreach ($_SESSION["cart"] as $id => $qty) {
             <?php endforeach; ?>
           </tbody>
         </table>
-        <div style="padding:20px; text-align:right;">
-          <div class="total">Total: <?php echo number_format($total, 2); ?> ₪</div>
+        
+        <div class="total-area">
+          <div class="coupon-section">
+            <form method="POST" style="display: flex; gap: 10px;">
+                <input type="text" name="coupon_code" placeholder="Enter Secret Coupon" style="padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                <button type="submit" name="apply_coupon" style="background: #475569; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Apply</button>
+            </form>
+            <div style="margin-top: 10px;"><?php echo $coupon_msg; ?></div>
+          </div>
+
+          <div style="text-align: right;">
+            <div style="color: #64748b;">Subtotal: <?php echo number_format($subtotal, 2); ?> ₪</div>
+            <?php if ($current_discount > 0): ?>
+                <div class="discount-line">Discount (<?php echo $current_discount; ?>%): -<?php echo number_format($discount_amount, 2); ?> ₪</div>
+            <?php endif; ?>
+            <div class="final-price">Total: <?php echo number_format($final_total, 2); ?> ₪</div>
+          </div>
         </div>
       </div>
     <?php endif; ?>
