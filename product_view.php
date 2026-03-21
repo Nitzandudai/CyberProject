@@ -7,15 +7,25 @@ $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 $product_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-$stmt = $db->prepare("SELECT * FROM products WHERE id = ?");
+// שאילתה מעודכנת שמושכת גם נתוני מבצע אם קיימים
+$stmt = $db->prepare("
+    SELECT p.*, d.deal_price, d.badge_text 
+    FROM products p 
+    LEFT JOIN deals d ON p.id = d.product_id AND d.is_active = 1 
+    WHERE p.id = ?
+");
 $stmt->execute([$product_id]);
 $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$product) { die("Product not found."); }
 
+// קביעת המחיר להצגה: מחיר מבצע אם קיים, אחרת מחיר רגיל
+$displayPrice = ($product['deal_price'] !== null) ? (float)$product['deal_price'] : (float)$product['price'];
+$isOnSale = ($product['deal_price'] !== null);
+
 $cartCount = array_sum($_SESSION["cart"] ?? []);
 
-// לוגיקת הוספת ביקורת (נשארת זהה)
+// לוגיקת הוספת ביקורת
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit_review"])) {
     $user = $_SESSION["username"];
     $rating = (int)$_POST["rating"];
@@ -37,6 +47,13 @@ $reviews = $revStmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <link rel="stylesheet" href="assets/styles.css?v=5">
     <title><?php echo htmlspecialchars($product['name']); ?></title>
+    <style>
+        .price-area { margin-bottom: 25px; }
+        .original-price { text-decoration: line-through; color: #94a3b8; font-size: 1.2rem; margin-right: 10px; }
+        .sale-price { font-size: 2.5rem; font-weight: 800; color: #ef4444; }
+        .regular-price { font-size: 2.5rem; font-weight: 800; color: #2563eb; }
+        .badge-view { background: #ef4444; color: white; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; display: inline-block; margin-bottom: 10px; }
+    </style>
 </head>
 <body class="home-page">
 
@@ -55,11 +72,23 @@ $reviews = $revStmt->fetchAll(PDO::FETCH_ASSOC);
 <main class="container">
     <div style="display: flex; gap: 40px; margin-top: 40px; background: white; padding: 30px; border-radius: 18px; border: 1px solid #e6e8eb; align-items: center;">
         <div style="flex: 1; text-align: center;">
-            <img src="<?php echo htmlspecialchars($product['image']); ?>" style="max-width: 100%; max-height: 350px; border-radius: 12px;">
+            <img src="<?php echo htmlspecialchars($product['image']); ?>" style="max-width: 100%; max-height: 400px; border-radius: 12px;">
         </div>
         <div style="flex: 1;">
-            <h1 style="font-size: 2.5rem; margin-bottom: 10px;"><?php echo htmlspecialchars($product['name']); ?></h1>
-            <p style="font-size: 2rem; font-weight: 800; color: #2563eb; margin-bottom: 25px;"><?php echo $product['price']; ?> ₪</p>
+            <?php if ($isOnSale && !empty($product['badge_text'])): ?>
+                <div class="badge-view"><?php echo htmlspecialchars($product['badge_text']); ?></div>
+            <?php endif; ?>
+            
+            <h1 style="font-size: 2.8rem; margin-bottom: 10px;"><?php echo htmlspecialchars($product['name']); ?></h1>
+            
+            <div class="price-area">
+                <?php if ($isOnSale): ?>
+                    <span class="original-price"><?php echo number_format($product['price'], 2); ?> ₪</span>
+                    <span class="sale-price"><?php echo number_format($displayPrice, 2); ?> ₪</span>
+                <?php else: ?>
+                    <span class="regular-price"><?php echo number_format($displayPrice, 2); ?> ₪</span>
+                <?php endif; ?>
+            </div>
             
             <form method="POST" action="products.php">
                 <input type="hidden" name="add_id" value="<?php echo $product_id; ?>">
@@ -74,7 +103,6 @@ $reviews = $revStmt->fetchAll(PDO::FETCH_ASSOC);
 
     <?php if ($product['category'] === 'electronics'): ?>
         <hr style="margin: 50px 0; border: 0; border-top: 2px solid #f1f5f9;">
-        
         <h2 style="margin-bottom: 25px;">Customer Reviews</h2>
         
         <div style="background: #f8fafc; padding: 25px; border-radius: 18px; border: 1px solid #e2e8f0; margin-bottom: 40px;">
@@ -104,7 +132,7 @@ $reviews = $revStmt->fetchAll(PDO::FETCH_ASSOC);
                         <span style="color: #94a3b8; font-size: 0.85rem; margin-left: 12px;"><?php echo $rev['date']; ?></span>
                     </div>
                     <div style="line-height: 1.7; color: #334155;">
-                        <?php echo $rev['content']; ?>
+                        <?php echo $rev['content']; // פה יש XSS פוטנציאלי! ?>
                     </div>
                 </div>
             <?php endforeach; ?>

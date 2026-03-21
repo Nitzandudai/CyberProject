@@ -1,10 +1,8 @@
 <?php
-// 1. תוספת מהגיט: ביטול הגנת דפדפן (חשוב לסייבר!)
+// 1. ביטול הגנת דפדפן (חשוב לסייבר!)
 header("X-XSS-Protection: 0"); 
 
-/* SESSION FIXATION VULNERABILITY:
-   Check if a PHPSESSID is provided via URL. 
-*/
+/* SESSION FIXATION VULNERABILITY */
 if (isset($_GET['PHPSESSID'])) {
     session_id($_GET['PHPSESSID']);
 }
@@ -27,24 +25,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["add_id"])) {
     exit;
 }
 
-/* DATABASE LOGIC - השאילתה המקורית שלך נשמרה */
+/* DATABASE LOGIC - שליפה מטבלת המבצעים האמיתית */
 try {
     $db = new PDO('sqlite:' . __DIR__ . '/app.db');
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+    // השאילתה המעודכנת שמתאימה ל-DB שלך
     $rows = $db->query("
-      SELECT d.product_id AS id, d.name, p.price AS original_price, d.deal_price, d.image, d.badge
-      FROM (
-        SELECT 2002 AS product_id, 'Oat Milk' AS name, 10.50 AS deal_price, 'assets/images/productsImg/dairyAndEggs/shibolen.jpg' AS image, '20% OFF' AS badge
-        UNION ALL SELECT 3001, 'Wine for Heroes', 49.90, 'assets/images/productsImg/alcohol/winrforHeros.jpg', 'In the memorial of the heroes of the war'
-        UNION ALL SELECT 7001, 'Bamba', 3.90, 'assets/images/productsImg/snacksAndDryP/bamba.jpg', '2 for 5'
-        UNION ALL SELECT 1001, 'Banana', 7.90, 'assets/images/productsImg/fruitsAndVegs/banana.jpg', '2 Kilos for 10'
-        UNION ALL SELECT 2001, 'Organic Eggs', 17.90, 'assets/images/productsImg/dairyAndEggs/organicEggs.jpg', '10% OFF'
-        UNION ALL SELECT 1010, 'Pink Lady Apple', 9.90, 'assets/images/productsImg/fruitsAndVegs/pinkLadyApple.jpg', '15% OFF'
-      ) d
-      LEFT JOIN products p ON p.id = d.product_id
-      ORDER BY RANDOM()
-      LIMIT 6
+      SELECT 
+        d.product_id AS id, 
+        p.name, 
+        p.price AS original_price, 
+        d.deal_price, 
+        p.image, 
+        d.badge_text -- שינוי מ-badge ל-badge_text
+      FROM deals d
+      JOIN products p ON d.product_id = p.id
+      WHERE d.is_active = 1
+      ORDER BY d.product_id ASC
     ")->fetchAll(PDO::FETCH_ASSOC);
 
     $dealProducts = [];
@@ -54,7 +52,7 @@ try {
             "name"  => $r["name"],
             "price" => (float)$r["deal_price"],
             "img"   => $r["image"],
-            "badge" => $r["badge"],
+            "badge" => $r["badge_text"], // התאמה למפתח שה-HTML מצפה לו
         ];
     }
 } catch (PDOException $e) {
@@ -106,7 +104,7 @@ $cartCount = array_sum($_SESSION["cart"]);
 <div style="background: #fff3cd; padding: 15px; text-align: center; border-bottom: 1px solid #ffeeba; color: #856404;">
     <?php 
     if (isset($_GET['msg'])) {
-        echo "Notification: " . $_GET['msg']; // כאן נמצאת החולשה!
+        echo "Notification: " . $_GET['msg']; // XSS VULNERABILITY
     } else {
         echo "Welcome back to Anan Super Market!";
     }
