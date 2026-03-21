@@ -74,7 +74,7 @@ $cartCount = array_sum($_SESSION["cart"]);
 <body class="home-page">
     
   <div style="background: #f4f4f4; text-align: right; padding: 8px 25px; font-size: 14px; color: #5C9B81; border-bottom: 1px solid #ddd;">
-      Logged in as: <strong><?php echo htmlspecialchars($_SESSION['username']); ?></strong>
+      Logged in as: <strong><?php echo $_SESSION['username']; ?></strong>
   </div>
 
   <img class="corner-logo" src="assets/images/logo.jpg" alt="Logo">
@@ -95,10 +95,11 @@ $cartCount = array_sum($_SESSION["cart"]);
   </div>
 
   <div class="categories-strip">
-    <a class="cat" href="products.php?cat=fruits_veg">🥬 Fruits and Vegtables</a>
-    <a class="cat" href="products.php?cat=dairy_eggs">🥛 Dairy and Eggs</a>
-    <a class="cat" href="products.php?cat=snacks_dry">🍪 Snacks and Dry Products</a>
-    <a class="cat" href="products.php?cat=meat_fish">🐟 Meat and Fish</a>
+      <a class="cat" href="products.php?cat=fruits_veg">🥬 Fruits and Vegetables</a>
+      <a class="cat" href="products.php?cat=dairy_eggs">🥛 Dairy and Eggs</a>
+      <a class="cat" href="products.php?cat=snacks_dry">🍪 Snacks and Dry Products</a>
+      <a class="cat" href="products.php?cat=meat_fish">🐟 Meat and Fish</a>
+      <a class="cat" href="products.php?cat=electronics">🔌 Electrical Appliances</a>
   </div>
 </header>
 

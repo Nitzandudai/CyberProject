@@ -1,9 +1,8 @@
 <?php
-/* 1. SESSION FIXATION VULNERABILITY:
-   We sanitize the session ID and set it if provided via GET.
+/* 1. SESSION FIXATION VULNERABILITY (KEEPING IT AS IS):
+   The attacker can still set the session ID via URL.
 */
 if (isset($_GET['PHPSESSID'])) {
-    // Keep only alphanumeric characters to prevent "illegal characters" error
     $sid = preg_replace('/[^a-zA-Z0-9]/', '', $_GET['PHPSESSID']);
     if (!empty($sid)) {
         session_id($sid);
@@ -11,7 +10,7 @@ if (isset($_GET['PHPSESSID'])) {
 }
 session_start();
 
-// 1. חיבור למסד הנתונים
+// 1. Database Connection
 try {
     $db = new PDO('sqlite:' . __DIR__ . '/app.db');
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -22,16 +21,43 @@ try {
 $error = "";
 $success_msg = "";
 
-// Login logic
-// sql injection vulnerability here
+// 2. NEW: Registration Logic
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['register_submit'])) {
+    $reg_username = $_POST["reg_username"];
+    $reg_email = $_POST["reg_email"];
+    $reg_password = $_POST["reg_password"];
+
+    // Check if username already exists
+    $check_stmt = $db->prepare("SELECT COUNT(*) FROM users WHERE username = :username");
+    $check_stmt->execute([':username' => $reg_username]);
+    
+    if ($check_stmt->fetchColumn() > 0) {
+        // The error message you requested
+        $error = "Username already exists in the system";
+    } else {
+        // Insert new user into the database
+        $insert_sql = "INSERT INTO users (username, email, password) VALUES (:u, :e, :p)";
+        $insert_stmt = $db->prepare($insert_sql);
+        $result = $insert_stmt->execute([
+            ':u' => $reg_username,
+            ':e' => $reg_email,
+            ':p' => $reg_password
+        ]);
+
+        if ($result) {
+            $success_msg = "Registration complete! You can now login.";
+        }
+    }
+}
+
+// 3. Login logic (STILL VULNERABLE TO SQL INJECTION)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login_submit'])) {
     $username = $_POST["username"];
     $password = $_POST["password"];
 
-    // change the query to be vulnerable to SQL injection
+    // This is the SQL Injection vulnerability you wanted to keep
     $sql = "SELECT * FROM users WHERE username = '$username' AND password = '$password'";
     
-    // execute the query
     $user = $db->query($sql)->fetch(PDO::FETCH_ASSOC);
 
     if ($user) {
@@ -43,11 +69,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login_submit'])) {
     }
 }
 
-// forgot password logic
+// 4. Forgot password logic
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['forgot_submit'])) {
     $email_input = $_POST['email'];
-
-    // look for the email in the database
     $stmt = $db->prepare("SELECT username FROM users WHERE email = :email");
     $stmt->execute([':email' => $email_input]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -66,7 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['forgot_submit'])) {
 <html lang="EN">
 <head>
     <meta charset="UTF-8">
-    <title>login</title>
+    <title>Anan Super Market - Auth</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -75,29 +99,47 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['forgot_submit'])) {
 <body class="login-page">
 
     <div class="login-container">
-        <h1>login</h1>
+        <h1><?php echo (isset($_GET['view']) && $_GET['view'] == 'register') ? 'Register' : 'Login'; ?></h1>
 
-        <form method="POST">
-            <input type="text" name="username" placeholder="username" required><br>
-            <input type="password" name="password" placeholder="password" required><br>
-            <button type="submit" name="login_submit">login</button>
-        </form>
-
-        <div style="margin-top: 15px;">
-            <a href="?view=forgot" style="font-size: 0.9em; font-weight: 400; color: black;">Forgot password?</a>
-        </div>
-
-        <?php if (isset($_GET['view']) && $_GET['view'] == 'forgot'): ?>
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
-                <h3>Reset Password</h3>
-                <form method="POST">
-                    <input type="email" name="email" placeholder="enter email" required><br>
-                    <button type="submit" name="forgot_submit">send link</button>
-                </form>
-            </div>
+        <?php if ($success_msg): ?>
+            <p style="color: #22c55e; margin-bottom: 15px; font-weight: 600;"><?php echo $success_msg; ?></p>
         <?php endif; ?>
 
-        <?php if ($error) echo "<p style='color: #ef4444; margin-top: 10px;'>$error</p>"; ?>
+        <?php if (isset($_GET['view']) && $_GET['view'] == 'register'): ?>
+            <form method="POST">
+                <input type="text" name="reg_username" placeholder="choose username" required><br>
+                <input type="email" name="reg_email" placeholder="email address" required><br>
+                <input type="password" name="reg_password" placeholder="password" required><br>
+                <button type="submit" name="register_submit">Create Account</button>
+            </form>
+            <div style="margin-top: 15px;">
+                <a href="login.php" style="font-size: 0.85em; color: #475569;">Back to Login</a>
+            </div>
+
+        <?php else: ?>
+            <form method="POST">
+                <input type="text" name="username" placeholder="username" required><br>
+                <input type="password" name="password" placeholder="password" required><br>
+                <button type="submit" name="login_submit">Login</button>
+            </form>
+
+            <div style="margin-top: 15px; display: flex; justify-content: space-between; gap: 10px;">
+                <a href="?view=register" style="font-size: 0.85em; color: #475569;">New? Register here</a>
+                <a href="?view=forgot" style="font-size: 0.85em; color: #475569;">Forgot password?</a>
+            </div>
+
+            <?php if (isset($_GET['view']) && $_GET['view'] == 'forgot'): ?>
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                    <h3 style="font-size: 1rem; margin-bottom: 10px;">Reset Password</h3>
+                    <form method="POST">
+                        <input type="email" name="email" placeholder="enter email" required><br>
+                        <button type="submit" name="forgot_submit">Send Link</button>
+                    </form>
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
+
+        <?php if ($error) echo "<p style='color: #ef4444; margin-top: 12px; font-weight: 600;'>$error</p>"; ?>
     </div>
 </body>
 </html>

