@@ -14,37 +14,37 @@ $categories = [
   "electronics"=> "Electrical Appliances",
 ];
 
-// --- חיבור למסד הנתונים ---
+// --- Database connection ---
 $db = new PDO('sqlite:' . __DIR__ . '/app.db');
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 $selectedCat = $_GET["cat"] ?? "";
 $q = $_GET["q"] ?? "";
 
-// --- שלב 1: בניית השאילתה הפגיעה (Vulnerable Query) ---
-// שרשור ישיר של $q לתוך ה-SQL בלי שום הגנה
+// --- Step 1: Build vulnerable query (intentional insecure example) ---
+// Direct concatenation of $q into SQL with no protection
 $sql = "SELECT id, name, price, category, image FROM products WHERE name LIKE '%$q%'";
 
-// אם נבחרה קטגוריה, נוסיף אותה (גם בצורה פגיעה)
+// If a category is selected, append it (also insecurely)
 if ($selectedCat !== "") {
     $sql .= " AND category = '$selectedCat'";
 }
 
 $sql .= " ORDER BY name ASC";
 
-// --- שלב 2: הרצת השאילתה והוצאת נתונים ---
+// --- Step 2: Run query and fetch data ---
 try {
     $res = $db->query($sql);
     $rows = $res->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    // הצגת שגיאות SQL - קריטי בשבילנו כדי לראות אם ההזרקה עובדת
+    // Display SQL errors - important for us to verify if injection is working
     die("<div style='color:red; background:#eee; padding:10px; border:1px solid red;'>
             <strong>SQL Error:</strong> " . $e->getMessage() . "<br>
             <strong>Query:</strong> " . $sql . "
          </div>");
 }
 
-// --- שלב 3: המרה למבנה שה-HTML מכיר ---
+// --- Step 3: Convert to structure the HTML expects ---
 $filtered = [];
 foreach ($rows as $r) {
     $id = (int)$r["id"];
@@ -56,11 +56,11 @@ foreach ($rows as $r) {
     ];
 }
 
-// לוגיקת הוספה לסל (נשארת רגילה)
+// Add-to-cart logic (regular behavior)
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["add_id"])) {
     $add_id = (int)$_POST["add_id"];
     
-    // קריאת הכמות מהטופס, אם לא נשלחה כמות (כמו בדף הראשי) ברירת המחדל היא 1
+    // Read quantity from form; default 1 if not provided (as on main page)
     $qty = isset($_POST["qty"]) ? (int)$_POST["qty"] : 1;
     
     $_SESSION["cart"][$add_id] = ($_SESSION["cart"][$add_id] ?? 0) + $qty;

@@ -7,12 +7,12 @@ $_SESSION["cart"] = $_SESSION["cart"] ?? [];
 $db = new PDO('sqlite:' . __DIR__ . '/app.db');
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-// --- לוגיקת קופונים ---
+// --- Coupon logic ---
 $coupon_msg = "";
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["apply_coupon"])) {
     $code_input = $_POST["coupon_code"] ?? "";
     
-    // התיקון: אנחנו משתמשים ב-CAST כדי להפוך את הטקסט מהמשתמש ל-BLOB לצורך ההשוואה
+    // Fix: use CAST to convert user input string to BLOB for comparison
     $stmt = $db->prepare("SELECT discount_val FROM internal_coupons WHERE encrypted_code = CAST(? AS BLOB)");
     $stmt->execute([$code_input]);
     $coupon = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -103,7 +103,7 @@ foreach ($_SESSION["cart"] as $id => $qty) {
     ];
 }
 
-// חישוב הנחה סופי
+// Final discount calculation
 $discount_amount = ($subtotal * $current_discount) / 100;
 $final_total = $subtotal - $discount_amount;
 ?>

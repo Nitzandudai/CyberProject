@@ -7,7 +7,7 @@ $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 $product_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-// שאילתה מעודכנת שמושכת גם נתוני מבצע אם קיימים
+// Updated query that also pulls deal data when available
 $stmt = $db->prepare("
     SELECT p.*, d.deal_price, d.badge_text 
     FROM products p 
@@ -19,13 +19,13 @@ $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$product) { die("Product not found."); }
 
-// קביעת המחיר להצגה: מחיר מבצע אם קיים, אחרת מחיר רגיל
+// Determine display price: deal price if available, otherwise regular price
 $displayPrice = ($product['deal_price'] !== null) ? (float)$product['deal_price'] : (float)$product['price'];
 $isOnSale = ($product['deal_price'] !== null);
 
 $cartCount = array_sum($_SESSION["cart"] ?? []);
 
-// לוגיקת הוספת ביקורת
+// Review submission logic
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit_review"])) {
     $user = $_SESSION["username"];
     $rating = (int)$_POST["rating"];
@@ -132,7 +132,7 @@ $reviews = $revStmt->fetchAll(PDO::FETCH_ASSOC);
                         <span style="color: #94a3b8; font-size: 0.85rem; margin-left: 12px;"><?php echo $rev['date']; ?></span>
                     </div>
                     <div style="line-height: 1.7; color: #334155;">
-                        <?php echo $rev['content']; // פה יש XSS פוטנציאלי! ?>
+                        <?php echo $rev['content'];?>
                     </div>
                 </div>
             <?php endforeach; ?>

