@@ -2,11 +2,6 @@
 // 1. ביטול הגנת דפדפן (חשוב לסייבר!)
 header("X-XSS-Protection: 0"); 
 
-/* SESSION FIXATION VULNERABILITY */
-if (isset($_GET['PHPSESSID'])) {
-    session_id($_GET['PHPSESSID']);
-}
-
 session_start();
 
 /* AUTHENTICATION CHECK */
@@ -116,23 +111,35 @@ $cartCount = array_sum($_SESSION["cart"]);
     <div class="hero-box">
       <h2>DEALS OF THE WEEK</h2>
       <div class="products-grid">
-        <?php foreach ($dealProducts as $id => $p): ?>
-          <article class="product-card">
-            <?php if (!empty($p["badge"])): ?>
-              <div class="badge"><?php echo htmlspecialchars($p["badge"]); ?></div>
-            <?php endif; ?>
-            <div class="product-img"><img src="<?php echo htmlspecialchars($p["img"]); ?>" alt=""></div>
-            <div class="product-body">
-              <div class="product-name"><?php echo htmlspecialchars($p["name"]); ?></div>
-              <div class="product-price"><?php echo number_format((float)$p["price"], 2); ?> ₪</div>
-              <form method="POST" action="home.php">
-                  <input type="hidden" name="add_id" value="<?php echo $id; ?>">
-                  <button type="submit">Add to cart</button>
-              </form>
-            </div>
-          </article>
-        <?php endforeach; ?>
-      </div>
+          <?php foreach ($dealProducts as $id => $p): ?>
+            <article class="product-card">
+              <?php if (!empty($p["badge"])): ?>
+                <div class="badge"><?php echo htmlspecialchars($p["badge"]); ?></div>
+              <?php endif; ?>
+
+              <div class="product-img">
+                <a href="product_view.php?id=<?php echo $id; ?>">
+                  <img src="<?php echo htmlspecialchars($p["img"]); ?>" alt="<?php echo htmlspecialchars($p["name"]); ?>">
+                </a>
+              </div>
+
+              <div class="product-body">
+                <div class="product-name">
+                  <a href="product_view.php?id=<?php echo $id; ?>" style="text-decoration: none; color: inherit; font-weight: bold;">
+                    <?php echo htmlspecialchars($p["name"]); ?>
+                  </a>
+                </div>
+
+                <div class="product-price"><?php echo number_format((float)$p["price"], 2); ?> ₪</div>
+                
+                <form method="POST" action="home.php">
+                    <input type="hidden" name="add_id" value="<?php echo $id; ?>">
+                    <button type="submit">Add to cart</button>
+                </form>
+              </div>
+            </article>
+          <?php endforeach; ?>
+        </div>
     </div>
   </section>
 </main>

