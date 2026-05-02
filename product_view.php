@@ -53,6 +53,45 @@ $reviews = $revStmt->fetchAll(PDO::FETCH_ASSOC);
         .sale-price { font-size: 2.5rem; font-weight: 800; color: #ef4444; }
         .regular-price { font-size: 2.5rem; font-weight: 800; color: #2563eb; }
         .badge-view { background: #ef4444; color: white; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; display: inline-block; margin-bottom: 10px; }
+        .id-modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.52);
+            z-index: 2000;
+        }
+        .id-modal.is-open { display: flex; }
+        .id-modal-card {
+            width: min(460px, 100%);
+            background: #fff;
+            border-radius: 18px;
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+            box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+        }
+        .id-modal-card h2 { margin: 0 0 12px; }
+        .id-modal-card input[type="file"] {
+            width: 100%;
+            margin: 14px 0;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+        .id-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .id-submit {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #fff;
+        }
     </style>
 </head>
 <body class="home-page">
@@ -90,13 +129,13 @@ $reviews = $revStmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php endif; ?>
             </div>
             
-            <form method="POST" action="products.php">
+            <form method="POST" action="products.php" id="product-add-form">
                 <input type="hidden" name="add_id" value="<?php echo $product_id; ?>">
                 <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
                     <label style="font-weight: 600;">Quantity:</label>
                     <input type="number" name="qty" value="1" min="1" style="width: 70px; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: bold; text-align: center;">
                 </div>
-                <button type="submit" class="add-btn" style="width: 100%; padding: 15px; font-size: 1.2rem;">Add to Cart</button>
+                <button type="<?php echo $product['category'] === 'alcohol' ? 'button' : 'submit'; ?>" id="product-add-button" class="add-btn" style="width: 100%; padding: 15px; font-size: 1.2rem;">Add to Cart</button>
             </form>
         </div>
     </div>
@@ -139,5 +178,48 @@ $reviews = $revStmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     <?php endif; ?>
 </main>
+
+<?php if ($product['category'] === 'alcohol'): ?>
+<div class="id-modal" id="id-modal" aria-hidden="true">
+  <form class="id-modal-card" id="id-upload-form" method="POST" action="products.php" enctype="multipart/form-data">
+    <h2>Alcohol ID Check</h2>
+    <p>To add alcohol to your cart, please upload a photo of your ID:</p>
+    <input type="hidden" name="add_id" value="<?php echo $product_id; ?>">
+    <input type="hidden" name="qty" id="modal-qty" value="1">
+    <input type="file" name="id_photo" accept="image/*" required>
+    <div class="id-modal-actions">
+      <button type="button" id="id-modal-cancel">Cancel</button>
+      <button type="submit" class="id-submit">Upload and Add</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  const addButton = document.getElementById('product-add-button');
+  const addForm = document.getElementById('product-add-form');
+  const idModal = document.getElementById('id-modal');
+  const idUploadForm = document.getElementById('id-upload-form');
+  const modalQty = document.getElementById('modal-qty');
+  const cancelIdModal = document.getElementById('id-modal-cancel');
+
+  addButton.addEventListener('click', () => {
+    modalQty.value = addForm.querySelector('input[name="qty"]').value;
+    idModal.classList.add('is-open');
+    idModal.setAttribute('aria-hidden', 'false');
+  });
+
+  cancelIdModal.addEventListener('click', () => {
+    idUploadForm.reset();
+    idModal.classList.remove('is-open');
+    idModal.setAttribute('aria-hidden', 'true');
+  });
+
+  idModal.addEventListener('click', (event) => {
+    if (event.target === idModal) {
+      cancelIdModal.click();
+    }
+  });
+</script>
+<?php endif; ?>
 </body>
 </html>

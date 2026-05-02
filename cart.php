@@ -122,6 +122,18 @@ $final_total = $subtotal - $discount_amount;
     .total-label { font-size:18px; font-weight:800; }
     .final-price { font-size: 24px; font-weight: 800; color: #1e293b; }
     .discount-line { color: #ef4444; font-weight: 600; }
+    .pay-button {
+      display: inline-block;
+      margin-top: 14px;
+      padding: 12px 24px;
+      background: #2563eb;
+      color: #fff;
+      border: 0;
+      border-radius: 12px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .pay-button:hover { filter: brightness(0.95); text-decoration: none; }
   </style>
 </head>
 <body class="home-page">
@@ -183,6 +195,9 @@ $final_total = $subtotal - $discount_amount;
                 <div class="discount-line">Discount (<?php echo $current_discount; ?>%): -<?php echo number_format($discount_amount, 2); ?> ₪</div>
             <?php endif; ?>
             <div class="final-price">Total: <?php echo number_format($final_total, 2); ?> ₪</div>
+            <form action="payment_method.php" method="GET">
+              <button class="pay-button" type="submit">Go To Pay</button>
+            </form>
           </div>
         </div>
       </div>
