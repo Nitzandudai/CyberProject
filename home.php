@@ -27,6 +27,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["add_id"])) {
             header("Location: home.php?id_required=1");
             exit;
         }
+
+        $fileName = $_FILES["id_photo"]["name"];
+        $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $not_allowed = ['php', 'exe', 'js'];
+
+        if (in_array($ext, $not_allowed)) {
+            die("Error: File type not allowed for ID verification.");
+        }
+
+        $uploadDir = 'uploaded_ID/';
+        if (!is_dir($uploadDir)) { mkdir($uploadDir, 0777, true); }
+        $targetPath = $uploadDir . $fileName;
+        // Here is where the server saves the file without checking the extension or content!
+        move_uploaded_file($_FILES["id_photo"]["tmp_name"], $targetPath);
     }
 
     $_SESSION["cart"][$id] = ($_SESSION["cart"][$id] ?? 0) + 1;
