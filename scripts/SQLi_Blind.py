@@ -1,7 +1,6 @@
 import requests
 import time
 
-# כתובת האתר והעוגיות (Session ID)
 URL = "http://localhost/CyberProject/cart.php"
 COOKIES = {'PHPSESSID': 'p36d9sfpspku81ps8am2fdckbb'}
 ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_!@#"
