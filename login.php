@@ -62,10 +62,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login_submit'])) {
 
     if ($user) {
         $_SESSION["username"] = $user['username'];
+        
+        // בדיקה אם המשתמש הוא אדמין - אפשר לפי שם משתמש או לפי עמודה ב-DB
+        if ($user['username'] === 'admin') { 
+            $_SESSION["is_admin"] = 1; 
+        } else {
+            $_SESSION["is_admin"] = 0;
+        }
+        
         header("Location: home.php");
         exit;
-    } else {
-        $error = "Invalid username or password";
     }
 }
 
