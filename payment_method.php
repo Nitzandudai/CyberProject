@@ -138,14 +138,7 @@ $final_total = $subtotal - $discount_amount;
   </style>
 </head>
 <body class="home-page">
-  <img class="corner-logo" src="assets/images/logo.jpg" alt="Logo">
-  <header class="site-header">
-    <div class="topbar">
-      <nav class="toplinks">
-        <a href="home.php">Home</a> | <a href="products.php">All Products</a> | <a href="cart.php">My Cart (<?php echo $cartCount; ?>)</a>
-      </nav>
-    </div>
-  </header>
+  <?php include 'header.php'; ?>
   <main class="container">
     <h1>Payment Method</h1>
 

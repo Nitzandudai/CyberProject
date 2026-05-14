@@ -65,10 +65,6 @@ body.login-page{
 /* Home page background (your image with logo on the side) */
 body.home-page{
   background-color:#f2efe6;
-  background-image:url("images/home-bg.jpg");
-  background-repeat:no-repeat;
-  background-position: top 16px left 16px;
-  background-size: 360px auto;
 }
 
 /* ========== Login page box ========== */
@@ -86,7 +82,6 @@ body.home-page{
 /* ========== Header / Navbar ========== */
 .site-header{
   position:sticky;
-  padding-left: 290px; 
   top: 5px;
   z-index:50;
   background: rgba(255,255,255,0.92);
@@ -96,18 +91,12 @@ body.home-page{
 /* search button */
 .topbar{
   max-width:1200px;
-  margin:1px;
-  padding-left: 290px;  
+  margin:0 auto;
+  padding:8px 16px;
   display:flex;
-  gap: 12px;;
+  gap: 12px;
   align-items:center;
 }
-
-
- /* Leave space for the corner logo (desktop) */
-.site-header .topbar{
-  padding-left: 290px;
-} 
 
 .toplinks{
   display:flex;
@@ -183,7 +172,7 @@ body.home-page{
 }
 
 .product-card{ position:relative; background:#fff; border:1px solid #e6e8eb; border-radius:16px; overflow:hidden; }
-.product-img{ height:120px; background:#f8fafc; display:flex; align-items:center; justify-content:center; }
+.product-img{ height:120px; background:#fff; display:flex; align-items:center; justify-content:center; }
 .product-img img{ max-height:100px; max-width:90%; object-fit:contain; }
 .product-body{ padding:12px; display:flex; flex-direction:column; gap:8px; }
 .badge{ position:absolute; top:10px; left:10px; background:#ef4444; color:#fff; padding:6px 10px; border-radius:999px; font-size:12px; }
@@ -191,13 +180,9 @@ body.home-page{
 
 /* ========== Corner logo image ========== */
 .corner-logo{
-  position: fixed;
-  top: 14px;
-  left: 14px;
-  width: 240px;
-  height: auto;
-  z-index: 1000;
-  pointer-events: none;
+  height: 60px;
+  width: auto;
+  flex-shrink: 0;
 }
 
 /* ========== Responsive ========== */
@@ -209,9 +194,5 @@ body.home-page{
   .topbar{ flex-direction:column; align-items:stretch; }
   .products-grid{ grid-template-columns: repeat(2,1fr); }
 
-  /* On mobile, don't reserve space for the logo */
-  .site-header .topbar{ padding-left:16px; }
-
-  /* Make the logo smaller on mobile */
-  .corner-logo{ width: 160px; }
+  .corner-logo{ height: 40px; }
 }

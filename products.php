@@ -134,20 +134,7 @@ $pageTitle = ($selectedCat && isset($categories[$selectedCat])) ? $categories[$s
   </style>
 </head>
 <body class="home-page">
-<header class="site-header">
-  <div class="topbar">
-    <form class="search-form" action="products.php" method="GET">
-      <?php if ($selectedCat): ?>
-        <input type="hidden" name="cat" value="<?php echo htmlspecialchars($selectedCat); ?>">
-      <?php endif; ?>
-      <input type="text" name="q" value="<?php echo htmlspecialchars($q); ?>" placeholder="Search products" />
-      <button type="submit">Search</button>
-    </form>
-    <nav class="toplinks">
-      <a href="home.php">Home</a> | <a href="products.php">All Products</a> | <a href="cart.php">Cart (<?php echo $cartCount; ?>)</a>
-    </nav>
-  </div>
-</header>
+<?php include 'header.php'; ?>
 
 <main class="container">
   <h1><?php echo htmlspecialchars($pageTitle); ?></h1>

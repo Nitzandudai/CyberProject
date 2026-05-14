@@ -57,18 +57,7 @@ $reviews = $revStmt->fetchAll(PDO::FETCH_ASSOC);
     </style>
 </head>
 <body class="home-page">
-
-<header class="site-header">
-  <div class="topbar">
-    <form class="search-form" action="products.php" method="GET">
-      <input type="text" name="q" placeholder="Search products" />
-      <button type="submit">Search</button>
-    </form>
-    <nav class="toplinks">
-      <a href="home.php">Home</a> | <a href="products.php">All Products</a> | <a href="cart.php">Cart (<?php echo $cartCount; ?>)</a>
-    </nav>
-  </div>
-</header>
+<?php include 'header.php'; ?>
 
 <main class="container">
     <div style="display: flex; gap: 40px; margin-top: 40px; background: white; padding: 30px; border-radius: 18px; border: 1px solid #e6e8eb; align-items: center;">
