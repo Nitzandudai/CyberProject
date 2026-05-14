@@ -91,7 +91,13 @@ $reviews = $revStmt->fetchAll(PDO::FETCH_ASSOC);
         <div style="background: #f8fafc; padding: 25px; border-radius: 18px; border: 1px solid #e2e8f0; margin-bottom: 40px;">
             <h3>Write a Review</h3>
             <form method="POST">
-                <select name="rating" style="padding: 10px; border-radius: 8px;"><option value="5">⭐⭐⭐⭐⭐</option></select>
+                <select name="rating" style="padding: 10px; border-radius: 8px;">
+                    <option value="5">⭐⭐⭐⭐⭐</option>
+                    <option value="4">⭐⭐⭐⭐</option>
+                    <option value="3">⭐⭐⭐</option>
+                    <option value="2">⭐⭐</option>
+                    <option value="1">⭐</option>
+                </select>
                 <textarea name="content" rows="4" style="width: 100%; padding: 15px; border-radius: 12px; margin-top:10px;" placeholder="Tell us what you think..." required></textarea>
                 <button type="submit" name="submit_review" style="margin-top: 20px; background: #2563eb; color: white; padding: 12px 30px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Post Review</button>
             </form>
