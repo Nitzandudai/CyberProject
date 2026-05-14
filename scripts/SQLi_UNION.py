@@ -5,11 +5,12 @@ import re
 
 # --- Configuration ---
 BASE_URL = "http://localhost/CyberProject" 
+sid = "rv82jh01b0c0pq4ift362fg6vp" # CHEAT - replace with a valid session ID obtained from a successful login or the SQLi bypass
+
 #CHEAT - how do we now that we need to use prudacts page?
 #אבל תכלס אפשר לגלות את זה מחיפוש באתר בתור משתמש, ממחקר מקדים שמבצע התוקף
-PRODUCTS_URL = f"{BASE_URL}/products.php" #we are not using this, can be deleted - just didnt want you to forget if it was importent :)
 
-def dump_users(target_url="http://localhost/CyberProject/products.php", session_id=None):
+def dump_users(target_url="http://localhost/CyberProject/products.php", session_id=sid):
 
     def print_step(title, payload, explanation):
         print(f"\n\033[1;34m[STEP]: {title}\033[0m")
