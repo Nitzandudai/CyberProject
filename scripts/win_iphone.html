@@ -89,8 +89,10 @@
 
     <script>
         function launchAttack() {
-            // change to the attacker server url
-            const targetUrl = "http://192.168.1.66:8000/admin_reply.php";
+            // Default to localhost so the lab runs on a single XAMPP machine;
+            // for a multi-machine demo, host this file on attacker.example.com
+            // and keep targetUrl pointed at the victim's admin_reply.php.
+            const targetUrl = "http://localhost/CyberProject/admin_reply.php";
             const insults = [
                 "Stop complaining! You are just a boring person.",
                 "Don't buy here again, we don't like you.",

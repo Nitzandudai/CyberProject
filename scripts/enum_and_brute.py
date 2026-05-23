@@ -1,6 +1,6 @@
 import requests
 
-def run_attack(base_url="http://192.168.56.1/CyberProject/login.php", input_file="usernames.txt"):
+def run_attack(base_url="http://localhost/CyberProject/login.php", input_file="usernames.txt"):
     register_url = f"{base_url}?view=register"
     found_users = []
     cracked_accounts = []

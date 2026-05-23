@@ -1,6 +1,9 @@
 import requests
 
-DEFAULT_BASE = "http://192.168.56.1/CyberProject/" 
+# Default target is localhost so the labs work out of the box on a single
+# XAMPP machine. Pass base_url=... to the functions below to demo against
+# a different host (e.g. a LAN IP) in a multi-machine network demo.
+DEFAULT_BASE = "http://localhost/CyberProject/"
 
 def try_brute_force(user="carlos", filename="passwords.txt", base_url=DEFAULT_BASE):
     login_url = base_url + "login.php"

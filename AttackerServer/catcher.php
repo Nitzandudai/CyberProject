@@ -38,7 +38,7 @@ if (isset($_GET['data'])) {
     <script>
     function closeOrRedirect() {
         if (!window.close()) {
-            window.location.href = "http://192.168.56.1/CyberProject/home.php";
+            window.location.href = "http://localhost/CyberProject/home.php";
         }
     }
     </script>
