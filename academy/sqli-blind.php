@@ -30,29 +30,9 @@ academy_layout_start($lesson['title']);
         server takes to reply.
     </p>
     <p>
-        The cart&apos;s coupon endpoint is the classic case. Its SQL is concatenated, but
-        the response is just &quot;Coupon Applied!&quot; or &quot;Invalid Coupon Code.&quot;
-        - no leak channel. <strong>And UNION is explicitly blocked</strong>:
-    </p>
-    <pre><code>if (preg_match('/union/i', $code_input)) {
-    $coupon_msg = "Security Alert: UNION keyword is forbidden!";
-} else {
-    $sql = "SELECT discount_val FROM CUPONS
-             WHERE encrypted_code = '$code_input'";
-    $res = $internal_db-&gt;query($sql);
-    ...
-}</code></pre>
-    <p>
-        That leaves <strong>time-based blind injection</strong>. SQLite has no
-        <code>SLEEP()</code> function, but it has <code>randomblob(N)</code>, which
-        allocates a large blob and is reliably slow for big <code>N</code>. We hide that
-        inside a <code>CASE WHEN</code> so it only runs when our boolean question is true:
-    </p>
-    <pre><code>CASE WHEN (&lt;question&gt;) THEN randomblob(250000000) ELSE 1 END</code></pre>
-    <p>
-        If the server takes noticeably longer than the baseline (we use baseline + 0.5s),
-        the answer was YES. Otherwise NO. With one yes/no probe per character per position
-        in the alphabet, we can extract any string from the database, one letter at a time.
+        With one yes/no probe per character per position in the alphabet, that single
+        side channel is enough to extract any string from the database, one letter at a
+        time.
     </p>
     <div class="academy-callout">
         <strong>Why this lab is on a separate database:</strong> the coupons live in

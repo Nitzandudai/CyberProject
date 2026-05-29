@@ -36,12 +36,6 @@ academy_layout_start($lesson['title']);
         <li>The data we want to leak has to be placed in a column that the application
             actually renders to HTML.</li>
     </ol>
-    <div class="academy-callout">
-        <strong>SQLite specifics:</strong> table metadata lives in
-        <code>sqlite_master</code> (columns <code>type</code>, <code>name</code>, …).
-        Comments need a trailing space: <code>-- </code>. There is no
-        <code>information_schema</code>.
-    </div>
 </section>
 
 <!-- 2. TASK 1 - LOCATE THE SINK AND CONFIRM SQLi -->

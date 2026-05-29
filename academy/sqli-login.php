@@ -28,39 +28,11 @@ academy_layout_start($lesson['title']);
         syntax, an attacker can break out of the data context and inject new SQL clauses.
     </p>
     <p>
-        Our login page builds its authentication query like this:
+        On a login form, the classic outcome is to make the <code>WHERE</code> clause
+        match every row (a <em>tautology</em>) and comment out the password check, so
+        the server fetches the first user in the table and logs you in as them with no
+        password at all.
     </p>
-    <pre><code>$sql = "SELECT * FROM users
-       WHERE username = '$username'
-         AND password = '$password'";
-
-$user = $db-&gt;query($sql)-&gt;fetch(PDO::FETCH_ASSOC);
-
-if ($user) {
-    $_SESSION["username"] = $user['username'];
-    header("Location: home.php");
-}</code></pre>
-    <p>
-        The variables <code>$username</code> and <code>$password</code> come straight from
-        the POST body and are pasted into the query with no escaping and no prepared
-        statement. Anything we put in <code>username</code> is interpreted as SQL.
-    </p>
-    <p>
-        If we submit <code>' OR 1=1 -- </code> as the username, the query becomes:
-    </p>
-    <pre><code>SELECT * FROM users
- WHERE username = '' OR 1=1 -- ' AND password = 'anything'</code></pre>
-    <p>
-        The single quote closes the empty string literal, <code>OR 1=1</code> makes the
-        <code>WHERE</code> clause true for every row, and <code>--&nbsp;</code> comments out
-        the rest of the query (including the password check). The query returns the first
-        row of <code>users</code>, and the application happily logs us in as that user.
-    </p>
-    <div class="academy-callout">
-        <strong>SQLite quirk worth remembering:</strong> the <code>--</code> line-comment
-        token in SQLite requires a trailing space or end-of-line. The payload is
-        <code>' OR 1=1 -- </code> with a space at the end, not <code>' OR 1=1 --</code>.
-    </div>
 </section>
 
 <!-- 2. TASK 1 - FIND THE INJECTABLE FORM -->
@@ -109,12 +81,30 @@ if ($user) { /* logged in */ }</code></pre>
             and without using the &quot;Forgot password&quot; flow.
         </li>
     </ol>
-    <p>
-        <strong>SQLite gotcha:</strong> the <code>--</code> line-comment token in SQLite
-        needs a trailing space (or end-of-line) to be parsed as a comment. Without it,
-        the rest of the query is treated as part of the identifier and your payload
-        silently fails.
-    </p>
+    <details class="academy-hint">
+        <summary>Reveal the SQLite gotcha (read this if your payload looks right but isn&apos;t working)</summary>
+        <p>
+            The <code>--</code> line-comment token in SQLite requires a <strong>trailing
+            space</strong> (or end-of-line) to be parsed as a comment. Without it, the
+            rest of the query becomes part of the identifier and your payload silently
+            fails with no error.
+        </p>
+    </details>
+    <details class="academy-hint">
+        <summary>Reveal the payload (last-resort spoiler)</summary>
+        <p>
+            With your input wrapped in single quotes inside the query, the minimal
+            payload that closes the literal, makes <code>WHERE</code> always true and
+            comments away the trailing <code>AND password = '...'</code> is:
+        </p>
+        <pre><code>username: ' OR 1=1 -- 
+password: anything</code></pre>
+        <p>
+            That turns the query into
+            <code>SELECT * FROM users WHERE username = '' OR 1=1 -- ' AND password = '...'</code>,
+            which returns the first row of <code>users</code>.
+        </p>
+    </details>
 </section>
 
 <!-- 4. START THE LAB -->
