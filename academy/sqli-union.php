@@ -28,30 +28,13 @@ academy_layout_start($lesson['title']);
         to the original one with the <code>UNION</code> operator, so the result set the
         application happily renders also contains rows we picked.
     </p>
-    <p>
-        The product search on <code>products.php</code> is the perfect candidate:
-    </p>
-    <pre><code>$q = $_GET["q"] ?? "";
-
-$sql = "SELECT id, name, price, category, image
-        FROM products
-        WHERE name LIKE '%$q%'";
-
-$res = $db-&gt;query($sql);
-$rows = $res-&gt;fetchAll(PDO::FETCH_ASSOC);</code></pre>
-    <p>
-        <code>$q</code> is concatenated straight into a <code>LIKE</code> clause, and on any
-        SQL error the page even prints the failing query and the PDO message back to the
-        browser - a huge help while we iterate on payloads.
-    </p>
     <p>For UNION to work, three things have to line up:</p>
     <ol>
         <li>The injection point must let us terminate the original predicate cleanly.</li>
         <li>Our injected <code>SELECT</code> must return the <em>same number of columns</em>
-            as the original (here: <strong>5</strong>).</li>
+            as the original.</li>
         <li>The data we want to leak has to be placed in a column that the application
-            actually renders to HTML (here, the <code>name</code> and <code>price</code>
-            fields of each product card).</li>
+            actually renders to HTML.</li>
     </ol>
     <div class="academy-callout">
         <strong>SQLite specifics:</strong> table metadata lives in
@@ -61,11 +44,43 @@ $rows = $res-&gt;fetchAll(PDO::FETCH_ASSOC);</code></pre>
     </div>
 </section>
 
-<!-- 2. TASK -->
+<!-- 2. TASK 1 - LOCATE THE INJECTION POINT -->
 <section class="academy-block">
-    <h2>2. Your task</h2>
+    <h2>2. Task 1 - locate the injection point</h2>
+    <p>
+        Find a user-controlled parameter in the application that is concatenated directly
+        into a SQL query <em>and</em> whose result rows are rendered back into the HTML.
+        UNION needs both: a way to terminate the original predicate, and a place in the
+        response where injected columns will surface.
+    </p>
+    <details class="academy-hint">
+        <summary>Reveal the injection point</summary>
+        <p>
+            The product search on <code>products.php</code> is the perfect candidate. The
+            search term is taken straight from the query string and concatenated into a
+            <code>LIKE</code> clause:
+        </p>
+        <pre><code>$q = $_GET["q"] ?? "";
+
+$sql = "SELECT id, name, price, category, image
+        FROM products
+        WHERE name LIKE '%$q%'";
+
+$res = $db-&gt;query($sql);
+$rows = $res-&gt;fetchAll(PDO::FETCH_ASSOC);</code></pre>
+        <p>
+            On any SQL error the page even prints the failing query and the PDO message
+            back to the browser - a huge help while you iterate on payloads. The result rows
+            are rendered as product cards, which is exactly the kind of visible sink UNION
+            needs.
+        </p>
+    </details>
+</section>
+
+<!-- 3. TASK 2 - EXPLOIT THE INJECTION POINT -->
+<section class="academy-block">
+    <h2>3. Task 2 - exploit the injection point</h2>
     <ol>
-        <li>Find an injection point in the search box of <code>products.php</code>.</li>
         <li>Determine the number of columns in the underlying <code>SELECT</code>.</li>
         <li>Identify which of those columns are reflected in the HTML.</li>
         <li>List the tables in the database via <code>sqlite_master</code>.</li>
@@ -82,9 +97,9 @@ $rows = $res-&gt;fetchAll(PDO::FETCH_ASSOC);</code></pre>
     </p>
 </section>
 
-<!-- 3. START THE LAB -->
+<!-- 4. START THE LAB -->
 <section class="academy-block">
-    <h2>3. Start the lab</h2>
+    <h2>4. Start the lab</h2>
     <p>The vulnerable search page opens in a new tab. Log in first as
         <code>carlos</code> / <code>1234</code> if you are not already, then try
         simple payloads in the URL bar (<code>?q=...</code>) or in the header
@@ -94,7 +109,7 @@ $rows = $res-&gt;fetchAll(PDO::FETCH_ASSOC);</code></pre>
        target="_blank" rel="noopener">Open vulnerable product search</a>
 </section>
 
-<!-- 4. REVEAL SOLUTION -->
+<!-- 5. REVEAL SOLUTION -->
 <details class="academy-solution" id="academy-solution">
     <summary>Reveal solution (spoilers!)</summary>
     <div class="academy-solution-body">
@@ -162,9 +177,7 @@ $rows = $res-&gt;fetchAll(PDO::FETCH_ASSOC);</code></pre>
         <p>
             The script below performs all five steps and parses the resulting HTML with
             BeautifulSoup, returning a list of <code>(username, password)</code> tuples. It
-            expects a valid <code>PHPSESSID</code> in its <code>sid</code> variable
-            (the <code>chain_2_breach()</code> function in <code>Master_kill_chain.py</code>
-            feeds it the session of <em>HUCKER</em> after a normal login).
+            expects a valid <code>PHPSESSID</code> in its <code>sid</code> variable.
         </p>
         <div class="academy-script">
             <?php highlight_file(__DIR__ . '/../scripts/SQLi_UNION.py'); ?>

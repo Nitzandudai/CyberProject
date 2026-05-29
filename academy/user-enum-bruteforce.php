@@ -25,62 +25,90 @@ academy_layout_start($lesson['title']);
         Authentication has two halves: finding a valid username and guessing the matching
         password. Most public attacks against credentials start with
         <strong>user enumeration</strong> - turning a 2D guessing problem
-        (any username, any password) into a 1D one (known username, guess password).
+        (any username, any password) into a 1D problem (known username, guess password).
+        Once you have a confirmed list of usernames, brute force against an endpoint that
+        lacks rate limiting, CAPTCHAs, or account lockout will eventually pop any account
+        with a weak password.
     </p>
     <p>
-        Our registration page gives away which usernames exist. When you POST a new user,
-        the server uses a different error message for &quot;name taken&quot; than for any
-        other failure:
+        Enumeration works whenever the application leaks <em>which usernames exist</em>
+        through any observable side channel: a different error message, a different HTTP
+        status code, a measurable timing gap, a redirect that only happens in one case.
+        Anywhere the server has to look the user up - login, registration, password reset,
+        even an &quot;already invited?&quot; check - is a candidate.
     </p>
-    <pre><code>// login.php (register branch)
+</section>
+
+<!-- 2. TASK 1 - LOCATE THE ORACLE -->
+<section class="academy-block">
+    <h2>2. Task 1 - locate the oracle</h2>
+    <p>
+        Probe the application for a side-channel that distinguishes existing usernames
+        from non-existent ones. Try the same input across login, registration, and
+        forgot-password and compare the responses byte by byte: any difference - a
+        different error string, a different status, a different redirect - is the oracle
+        you need.
+    </p>
+    <details class="academy-hint">
+        <summary>Reveal the oracle</summary>
+        <p>
+            It is on the registration form. When you POST a new user, the server uses a
+            different error message for &quot;name taken&quot; than for any other
+            failure:
+        </p>
+        <pre><code>// login.php (register branch)
 $check_stmt = $db-&gt;prepare("SELECT COUNT(*) FROM users WHERE username = :username");
-$check_stmt-&gt;execute([':username' =&gt; $reg_username]);
+$check_stmt-&gt;execute([':username' -&gt; $reg_username]);
 
 if ($check_stmt-&gt;fetchColumn() &gt; 0) {
     $error = "Username already exists in the system"; // &lt;-- oracle
 } else {
     // insert new row
 }</code></pre>
-    <p>
-        Any name that triggers that exact string is a confirmed existing account. We
-        sweep a wordlist of candidate names, collect every hit, and then we have a list
-        of real usernames to brute-force.
-    </p>
-    <p>
-        The login endpoint helps the second phase. It is unauthenticated, has no rate
-        limiting, no CAPTCHA, no account lockout, and the redirect to
-        <code>home.php</code> on success is a clear signal - a 302 with
-        <code>Location: home.php</code> means we got in, anything else means we didn&apos;t.
-        Loop a small dictionary of common passwords against each enumerated user and
-        cracks fall out of any account with a weak password.
-    </p>
+        <p>
+            Any name that triggers that exact string is a confirmed existing account -
+            no email confirmation, no CAPTCHA, no rate limit between attempts. Pair that
+            with a username wordlist and you have a sweep.
+        </p>
+    </details>
 </section>
 
-<!-- 2. TASK -->
+<!-- 3. TASK 2 - SWEEP AND BRUTE FORCE -->
 <section class="academy-block">
-    <h2>2. Your task</h2>
+    <h2>3. Task 2 - sweep and brute force</h2>
     <ol>
-        <li>Find an &quot;oracle&quot; on the registration form that distinguishes
-            existing accounts from new ones.</li>
-        <li>Sweep <code>scripts/usernames.txt</code> against that oracle and build the
-            list of real accounts.</li>
-        <li>Brute-force each one with a short list of common passwords (try the ten or so
-            in the script&apos;s default list).</li>
+        <li>Sweep <code>scripts/usernames.txt</code> (shown below) against the oracle you
+            found in Task 1 and build the list of real accounts.</li>
+        <li>Brute-force each one with the ten-password list shown below (the script&apos;s
+            hardcoded default). The login endpoint has no rate limiting and no account
+            lockout, and a successful login returns a 302 redirect to
+            <code>home.php</code> - that&apos;s your success signal.</li>
         <li><strong>Goal:</strong> recover at least one <code>(username, password)</code>
             pair that lets you log in successfully.</li>
     </ol>
+
+    <p style="margin-top: 18px;"><strong>Your toolbox.</strong></p>
+    <details class="academy-hint">
+        <summary><code>scripts/usernames.txt</code> (expand to view)</summary>
+        <div class="academy-script">
+            <?php highlight_file(__DIR__ . '/../scripts/usernames.txt'); ?>
+        </div>
+    </details>
+    <p>The script&apos;s hardcoded common-password list (10 entries):</p>
+    <pre><code>123456, admin123, 12345678, 123456789, 12345,
+password, Aa123456, 1234567890, 111111, qwerty</code></pre>
 </section>
 
-<!-- 3. START THE LAB -->
+<!-- 4. START THE LAB -->
 <section class="academy-block">
-    <h2>3. Start the lab</h2>
+    <h2>4. Start the lab</h2>
     <p>The login + registration page opens in a new tab.</p>
     <a class="academy-lab-cta"
        href="<?= htmlspecialchars($lesson['target_url']) ?>"
        target="_blank" rel="noopener">Open vulnerable login page</a>
 </section>
 
-<!-- 4. REVEAL SOLUTION -->
+<!-- 5. REVEAL SOLUTION -->
 <details class="academy-solution" id="academy-solution">
     <summary>Reveal solution (spoilers!)</summary>
     <div class="academy-solution-body">
@@ -106,14 +134,11 @@ register_submit=</code></pre>
 
         <h3>Step 2 - spray common passwords</h3>
         <p>
-            For each enumerated user, POST to <code>login.php</code> with each of:
-        </p>
-        <pre><code>123456, admin123, 12345678, 123456789, 12345,
-password, Aa123456, 1234567890, 111111, qwerty</code></pre>
-        <p>
-            Detect success by <code>response.status_code == 302</code> and
-            <code>Location</code> containing <code>home.php</code> &mdash; that is the
-            same signal the application itself uses internally.
+            For each enumerated user, POST to <code>login.php</code> with each of the
+            ten passwords shown in Task 2. Detect success by
+            <code>response.status_code == 302</code> and <code>Location</code> containing
+            <code>home.php</code> &mdash; that is the same signal the application itself
+            uses internally.
         </p>
 
         <h3>Why it works</h3>
@@ -131,22 +156,9 @@ password, Aa123456, 1234567890, 111111, qwerty</code></pre>
         <h3>Automated exploit</h3>
         <p>
             The script wires both phases together and prints a summary at the end.
-            <code>chain_1_web_shell()</code> in <code>Master_kill_chain.py</code> uses it
-            as the discovery step before deciding whether to brute-force harder or fall
-            back to the broken password reset.
         </p>
         <div class="academy-script">
             <?php highlight_file(__DIR__ . '/../scripts/enum_and_brute.py'); ?>
-        </div>
-
-        <h3>The wordlists</h3>
-        <p><code>scripts/usernames.txt</code>:</p>
-        <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../scripts/usernames.txt'); ?>
-        </div>
-        <p><code>scripts/passwords.txt</code>:</p>
-        <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../scripts/passwords.txt'); ?>
         </div>
 
         <h3>How to fix it (for context)</h3>

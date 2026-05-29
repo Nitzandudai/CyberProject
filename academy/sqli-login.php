@@ -146,9 +146,7 @@ if ($user) {
         <p>
             The script below reproduces the attack programmatically. It detects success by
             looking for the <code>302</code> redirect to <code>home.php</code> and returns
-            the resulting <code>PHPSESSID</code>, which can be reused for further attacks
-            (this is exactly what <code>chain_3_stealth()</code> in
-            <code>Master_kill_chain.py</code> does to seed the blind-SQLi stage).
+            the resulting <code>PHPSESSID</code>, which can be reused for further attacks.
         </p>
         <div class="academy-script">
             <?php highlight_file(__DIR__ . '/../scripts/SQLi.py'); ?>

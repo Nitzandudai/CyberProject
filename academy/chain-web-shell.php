@@ -27,7 +27,7 @@ $web_shell_exists = file_exists($web_shell_path);
     <p>
         Capstones chain several individual labs into a complete attack scenario. This one
         models a typical opportunistic intrusion:
-        <strong>discover users &rarr; gain a foothold &rarr; achieve remote code execution</strong>.
+        <strong>discover users &rarr; gain a foothold &rarr; achieve remote code execution via web shell</strong>.
         Each stage falls back to the next if it fails, so the chain succeeds on a wide
         range of database states.
     </p>

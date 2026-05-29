@@ -30,12 +30,32 @@ academy_layout_start($lesson['title']);
         delivery vehicle.
     </p>
     <p>
-        Electronics product pages have a review form. Submissions go straight into the
-        database, and the rendering loop on <code>product_view.php</code> emits the
-        content unescaped:
+        Stored XSS lives anywhere user-supplied content is (a) saved server-side and
+        (b) later rendered back to other users without escaping. The
+        <strong>write</strong> boundary and the <strong>render</strong> boundary are
+        separate sanitisation problems - getting one right does not protect the other.
     </p>
-    <pre><code>// write path
-if ($_SERVER["REQUEST_METHOD"] === "POST" &amp;&amp; isset($_POST["submit_review"])) {
+</section>
+
+<!-- 2. TASK 1 - LOCATE THE SINK -->
+<section class="academy-block">
+    <h2>2. Task 1 - locate the sink</h2>
+    <p>
+        Browse the application and identify a feature where one user&apos;s input is
+        saved server-side and later rendered back to other visitors. Stored XSS only
+        lives where users can see each other&apos;s content - so think about which of
+        the application&apos;s pages displays content that someone else wrote.
+    </p>
+    <details class="academy-hint">
+        <summary>Reveal the sink</summary>
+        <p>
+            Electronics product pages have a review form. Submissions are written into
+            the <code>reviews</code> table via a prepared statement (so they&apos;re
+            SQL-safe), but the rendering loop on <code>product_view.php</code> emits
+            <code>$rev['content']</code> with no <code>htmlspecialchars()</code>:
+        </p>
+        <pre><code>// write path
+if ($_SERVER["REQUEST_METHOD"] == "POST" &amp;&amp; isset($_POST["submit_review"])) {
     $content = $_POST["content"]; // taken raw
     $ins = $db-&gt;prepare(
         "INSERT INTO reviews (product_id, username, rating, content)
@@ -49,33 +69,33 @@ foreach ($reviews as $rev) {
     ...
     echo $rev['content']; // no htmlspecialchars
 }</code></pre>
-    <p>
-        The prepared statement protects against SQL injection, but escaping at the
-        <strong>write</strong> boundary is not the same as escaping at the
-        <strong>render</strong> boundary. By the time <code>$rev['content']</code> is
-        printed, it is just a string of HTML.
-    </p>
-    <div class="academy-callout">
-        <strong>Only electronics products show reviews.</strong> The review block is
-        gated by <code>if ($product['category'] === 'electronics')</code>. Pick an
-        electronics product (e.g. <code>product_view.php?id=81</code>, the electric kettle)
-        before submitting your payload.
-    </div>
+        <p>
+            The prepared statement protects against SQL injection, but escaping at the
+            <strong>write</strong> boundary is not the same as escaping at the
+            <strong>render</strong> boundary. By the time <code>$rev['content']</code>
+            is printed, it is just a string of HTML.
+        </p>
+        <p>
+            <strong>Only electronics products show reviews.</strong> The review block
+            is gated by <code>if ($product['category'] == 'electronics')</code>, so
+            pick an electronics product (e.g. <code>product_view.php?id=81</code>, the
+            electric kettle) before submitting your payload.
+        </p>
+    </details>
 </section>
 
-<!-- 2. TASK -->
+<!-- 3. TASK 2 - EXPLOIT THE SINK -->
 <section class="academy-block">
-    <h2>2. Your task</h2>
+    <h2>3. Task 2 - exploit the sink</h2>
     <ol>
-        <li>Log in to the target site as any user (the seeded <code>HUCKER</code> account
-            works, or register your own).</li>
+        <li>Register an account on the target site and log in.</li>
         <li>Navigate to an electronics product and submit a review whose
             <em>content</em> contains a payload that exfiltrates
             <code>document.cookie</code> to your catcher.</li>
         <li>
-            <strong>Verify in a different browser session:</strong> log in as a different
-            user (or even a fresh visitor), open the same product page, and confirm the
-            payload fires automatically and the cookie shows up in
+            <strong>Verify in a different browser session:</strong> register a second
+            account, log in with it, open the same product page, and confirm the payload
+            fires automatically and the cookie shows up in
             <code>AttackerServer/stolen_cookies.txt</code>.
         </li>
     </ol>
@@ -85,18 +105,18 @@ foreach ($reviews as $rev) {
     </p>
 </section>
 
-<!-- 3. START THE LAB -->
+<!-- 4. START THE LAB -->
 <section class="academy-block">
-    <h2>3. Start the lab</h2>
+    <h2>4. Start the lab</h2>
     <p>The electric kettle product page (electronics &mdash; has the review form) opens
-       in a new tab. Log in first as <code>carlos</code> / <code>1234</code> if you
-       are not already.</p>
+       in a new tab. The page requires login, so register an account first if you
+       don&apos;t have one and log in with it.</p>
     <a class="academy-lab-cta"
        href="<?= htmlspecialchars($lesson['target_url']) ?>?id=81"
        target="_blank" rel="noopener">Open vulnerable product page</a>
 </section>
 
-<!-- 4. REVEAL SOLUTION -->
+<!-- 5. REVEAL SOLUTION -->
 <details class="academy-solution" id="academy-solution">
     <summary>Reveal solution (spoilers!)</summary>
     <div class="academy-solution-body">
@@ -147,13 +167,23 @@ foreach ($reviews as $rev) {
                 is deleted.</li>
         </ul>
 
+        <h3>The trade-off the attacker pays</h3>
+        <p>
+            Reflected XSS leaves no server-side footprint - the payload lives in a URL and
+            is gone the moment the response is rendered. Stored XSS is the opposite: every
+            successful injection writes a row to the <code>reviews</code> table tied to
+            the account that posted it, with a timestamp visible in the database, in any
+            admin moderation queue, and in the Apache access log. From a forensics
+            standpoint that account is burned - one log review and the defender knows
+            exactly which user dropped the payload. Real attackers plan around this;
+            thinking about <em>which identity</em> the malicious row will be linked to
+            is part of the attack design, not an afterthought.
+        </p>
+
         <h3>Automated exploit</h3>
         <p>
             The script logs in (defaults to <code>HUCKER</code> / <code>hucker123</code>),
-            then POSTs the malicious review. <code>chain_2_breach()</code> in
-            <code>Master_kill_chain.py</code> first dumps credentials with UNION SQLi and
-            then drives this script with the stolen account - making the attack untraceable
-            to the original attacker.
+            then POSTs the malicious review to the target product.
         </p>
         <div class="academy-script">
             <?php highlight_file(__DIR__ . '/../scripts/stored_xss.py'); ?>

@@ -29,10 +29,29 @@ academy_layout_start($lesson['title']);
         injected JavaScript inside the application&apos;s origin.
     </p>
     <p>
-        The home page has a notification banner that ingests a query parameter and prints
-        it unescaped:
+        Because the payload lives in the URL, exploitation is a two-part operation: a
+        <strong>malicious link</strong> the victim must follow, and a
+        <strong>catcher</strong> on a server we control that records the stolen data.
     </p>
-    <pre><code>// home.php
+</section>
+
+<!-- 2. TASK 1 - FIND THE REFLECTED SINK -->
+<section class="academy-block">
+    <h2>2. Task 1 - find the reflected sink</h2>
+    <p>
+        Browse the application and find a URL parameter (a query-string value) whose
+        contents are printed back into the response unescaped. Reflected XSS only lives
+        wherever user-controlled input appears in the page that rendered it, so look for
+        inputs that show up immediately in the response - banners, search results,
+        error messages, notifications.
+    </p>
+    <details class="academy-hint">
+        <summary>Reveal the reflected sink</summary>
+        <p>
+            The home page has a notification banner that ingests the <code>msg</code>
+            query parameter and prints it unescaped:
+        </p>
+        <pre><code>// home.php
 header("X-XSS-Protection: 0");   // explicitly turns off the browser&apos;s legacy filter
 
 ...
@@ -42,27 +61,22 @@ if (isset($_GET['msg'])) {
 } else {
     echo "Welcome back to Anan Super Market!";
 }</code></pre>
-    <p>
-        Two things make this lethal:
-    </p>
-    <ol>
-        <li>The page already requires a session, so anyone who is tricked into clicking the
-            link is logged in - meaning <code>document.cookie</code> contains a usable
-            <code>PHPSESSID</code>.</li>
-        <li><code>X-XSS-Protection: 0</code> disables the (already-dead) browser-side XSS
-            filter, so injected <code>&lt;script&gt;</code> tags execute without
-            interference.</li>
-    </ol>
-    <p>
-        Because the payload lives in the URL, exploitation is a two-part operation: a
-        <strong>malicious link</strong> the victim must follow, and a
-        <strong>catcher</strong> on a server we control that records the stolen data.
-    </p>
+        <p>Two things make this lethal:</p>
+        <ol>
+            <li>The page already requires a session, so anyone who is tricked into
+                clicking the link is logged in. The session cookie isn&apos;t marked
+                <code>HttpOnly</code>, so <code>document.cookie</code> hands a usable
+                <code>PHPSESSID</code> straight to injected JavaScript.</li>
+            <li><code>X-XSS-Protection: 0</code> disables the (already-dead) browser-side
+                XSS filter, so injected <code>&lt;script&gt;</code> tags execute without
+                interference.</li>
+        </ol>
+    </details>
 </section>
 
-<!-- 2. TASK -->
+<!-- 3. TASK 2 - EXPLOIT THE REFLECTED SINK -->
 <section class="academy-block">
-    <h2>2. Your task</h2>
+    <h2>3. Task 2 - exploit the reflected sink</h2>
     <ol>
         <li>Use the reflected sink on <code>home.php</code> and prove you can inject
             arbitrary HTML/JS (start with <code>alert(1)</code>).</li>
@@ -81,9 +95,9 @@ if (isset($_GET['msg'])) {
     </p>
 </section>
 
-<!-- 3. START THE LAB -->
+<!-- 4. START THE LAB -->
 <section class="academy-block">
-    <h2>3. Start the lab</h2>
+    <h2>4. Start the lab</h2>
     <p>
         Make sure you are already logged in on the target browser (e.g. as
         <code>carlos</code> / <code>1234</code>), then click the link below. The
@@ -94,7 +108,7 @@ if (isset($_GET['msg'])) {
        target="_blank" rel="noopener">Open vulnerable home page</a>
 </section>
 
-<!-- 4. REVEAL SOLUTION -->
+<!-- 5. REVEAL SOLUTION -->
 <details class="academy-solution" id="academy-solution">
     <summary>Reveal solution (spoilers!)</summary>
     <div class="academy-solution-body">
@@ -126,7 +140,7 @@ document.location =
         <p>
             Wrap the payload in <code>urllib.parse.quote()</code> and concatenate it onto
             <code>home.php?msg=</code>. The resulting URL is what you send to the victim
-            (email, chat, fake support ticket, …).
+            (email, chat, …).
         </p>
 
         <h3>Step 4 - the catcher</h3>

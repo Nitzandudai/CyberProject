@@ -483,6 +483,44 @@
     color: #b91c1c;
 }
 
+/* ===== Lightweight inline hint (minor spoiler, smaller than full solution) ===== */
+.academy-hint {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0 16px;
+    margin: 14px 0;
+}
+
+.academy-hint > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 12px 4px;
+    font-weight: 600;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.academy-hint > summary::-webkit-details-marker { display: none; }
+
+.academy-hint > summary::before {
+    content: "\25B6";
+    font-size: 0.7em;
+    color: #94a3b8;
+    transition: transform 0.15s ease;
+    display: inline-block;
+}
+
+.academy-hint[open] > summary::before {
+    transform: rotate(90deg);
+}
+
+.academy-hint[open] {
+    padding-bottom: 14px;
+}
+
 /* PHP highlight_file() output styling - keep the colored tokens but
    sit them on the dark code surface. */
 .academy-script {
@@ -491,6 +529,42 @@
     padding: 14px 16px;
     overflow-x: auto;
     margin: 14px 0;
+    position: relative;
+}
+
+.academy-script-copy {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 4px 10px;
+    font-size: 0.72rem;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 600;
+    color: #cbd5e1;
+    background: rgba(148, 163, 184, 0.10);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    z-index: 1;
+}
+
+.academy-script-copy:hover {
+    background: rgba(148, 163, 184, 0.20);
+    color: #ffffff;
+    border-color: rgba(148, 163, 184, 0.45);
+}
+
+.academy-script-copy.is-copied {
+    background: rgba(34, 197, 94, 0.18);
+    color: #86efac;
+    border-color: rgba(34, 197, 94, 0.35);
+}
+
+.academy-script-copy.is-failed {
+    background: rgba(239, 68, 68, 0.18);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.35);
 }
 
 .academy-script code {

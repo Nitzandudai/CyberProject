@@ -35,7 +35,7 @@ return [
         'difficulty' => 'Easy',
         'target_url' => '../login.php',
         'scripts'    => ['../scripts/SQLi.py'],
-        'status'     => 'ready',
+        'status'     => 'coming_soon',
     ],
 
     'sqli-union' => [
@@ -45,7 +45,7 @@ return [
         'difficulty' => 'Medium',
         'target_url' => '../products.php',
         'scripts'    => ['../scripts/SQLi_UNION.py'],
-        'status'     => 'ready',
+        'status'     => 'coming_soon',
     ],
 
     'sqli-blind' => [
@@ -55,7 +55,7 @@ return [
         'difficulty' => 'Hard',
         'target_url' => '../products.php',
         'scripts'    => ['../scripts/SQLi_Blind.py'],
-        'status'     => 'ready',
+        'status'     => 'coming_soon',
     ],
 
     'xss-reflected' => [
@@ -100,7 +100,6 @@ return [
         'scripts'    => [
             '../scripts/enum_and_brute.py',
             '../scripts/usernames.txt',
-            '../scripts/passwords.txt',
         ],
         'status'     => 'ready',
     ],
@@ -115,13 +114,13 @@ return [
             '../scripts/win_iphone.html',
             '../admin_reply.php',
         ],
-        'status'     => 'ready',
+        'status'     => 'coming_soon',
     ],
 
     /* ===== Capstone chains (split from Master_kill_chain.py) ===== */
 
     'chain-web-shell' => [
-        'title'         => 'Capstone: Full Web Shell (Enum -> Brute / Reset -> RCE)',
+        'title'         => 'Capstone: Full Web Shell (Enum -> Brute / Reset -> Web Shell)',
         'short'         => 'Discover users, gain access via brute force or broken reset, then drop a web shell for remote code execution.',
         'category'      => 'Capstone',
         'difficulty'    => 'Capstone',
@@ -147,7 +146,7 @@ return [
             '../scripts/SQLi_UNION.py',
             '../scripts/stored_xss.py',
         ],
-        'status'        => 'ready',
+        'status'        => 'coming_soon',
         'prerequisites' => ['sqli-union', 'xss-stored'],
     ],
 
@@ -162,7 +161,7 @@ return [
             '../scripts/SQLi.py',
             '../scripts/SQLi_Blind.py',
         ],
-        'status'        => 'ready',
+        'status'        => 'coming_soon',
         'prerequisites' => ['sqli-login', 'sqli-blind'],
     ],
 

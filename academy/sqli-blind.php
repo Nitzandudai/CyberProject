@@ -151,10 +151,7 @@ apply_coupon=1</code></pre>
         <h3>Automated exploit</h3>
         <p>
             The script automates the baseline, the alphabet walk, table discovery, and the
-            character-by-character data leak. <code>chain_3_stealth()</code> in
-            <code>Master_kill_chain.py</code> seeds it with the
-            <code>PHPSESSID</code> returned by the login-bypass SQLi, so the whole sequence
-            login-bypass &rarr; blind-leak runs unattended.
+            character-by-character data leak.
         </p>
         <div class="academy-script">
             <?php highlight_file(__DIR__ . '/../scripts/SQLi_Blind.py'); ?>
