@@ -63,36 +63,70 @@ if ($user) {
     </div>
 </section>
 
-<!-- 2. TASK -->
+<!-- 2. TASK 1 - FIND THE INJECTABLE FORM -->
 <section class="academy-block">
-    <h2>2. Your task</h2>
+    <h2>2. Task 1 - find the injectable form</h2>
+    <p>
+        Find a form whose input is concatenated straight into a SQL query with no
+        prepared statement. A single stray quote (<code>'</code>) in the field is a quick
+        smoke test: if the page reacts differently from a normal submission, the quote
+        reached the parser.
+    </p>
+    <details class="academy-hint">
+        <summary>Reveal the injectable form</summary>
+        <p>
+            It is the login form on <code>login.php</code>. The handler builds its
+            authentication query by concatenation:
+        </p>
+        <pre><code>$username = $_POST["username"];
+$password = $_POST["password"];
+
+$sql = "SELECT * FROM users
+         WHERE username = '$username'
+           AND password = '$password'";
+
+$user = $db-&gt;query($sql)-&gt;fetch(PDO::FETCH_ASSOC);
+if ($user) { /* logged in */ }</code></pre>
+        <p>
+            Both fields are pasted in unescaped. Anything you put in <code>username</code>
+            is interpreted as SQL.
+        </p>
+    </details>
+</section>
+
+<!-- 3. TASK 2 - BYPASS THE LOGIN -->
+<section class="academy-block">
+    <h2>3. Task 2 - bypass the login</h2>
     <ol>
-        <li>Open the login page on the target site.</li>
+        <li>Craft a <code>username</code> value that closes the string literal, makes the
+            <code>WHERE</code> clause true for every row, and comments out the
+            <code>AND password = '...'</code> check.</li>
+        <li>Put anything non-empty in the <code>password</code> field - it never gets
+            evaluated.</li>
         <li>
-            Log in as <strong>any existing user</strong> without registering an account and
-            without knowing any real password.
-        </li>
-        <li>
-            Confirm success: you should land on <code>home.php</code> with a "Logged in as:"
-            banner showing a real account&apos;s username.
+            <strong>Goal:</strong> land on <code>home.php</code> with a &quot;Logged in
+            as:&quot; banner showing a real account&apos;s username, without registering
+            and without using the &quot;Forgot password&quot; flow.
         </li>
     </ol>
     <p>
-        <strong>Constraints:</strong> do not press the "Register" link, do not touch the
-        "Forgot password" flow. The whole exploit must happen on the login form itself.
+        <strong>SQLite gotcha:</strong> the <code>--</code> line-comment token in SQLite
+        needs a trailing space (or end-of-line) to be parsed as a comment. Without it,
+        the rest of the query is treated as part of the identifier and your payload
+        silently fails.
     </p>
 </section>
 
-<!-- 3. START THE LAB -->
+<!-- 4. START THE LAB -->
 <section class="academy-block">
-    <h2>3. Start the lab</h2>
+    <h2>4. Start the lab</h2>
     <p>The vulnerable login page opens in a new tab so you can keep this lesson visible.</p>
     <a class="academy-lab-cta"
        href="<?= htmlspecialchars($lesson['target_url']) ?>"
        target="_blank" rel="noopener">Open vulnerable login page</a>
 </section>
 
-<!-- 4. REVEAL SOLUTION -->
+<!-- 5. REVEAL SOLUTION -->
 <details class="academy-solution" id="academy-solution">
     <summary>Reveal solution (spoilers!)</summary>
     <div class="academy-solution-body">
@@ -154,9 +188,9 @@ if ($user) {
 
         <h3>How to fix it (for context)</h3>
         <p>
-            Replace string concatenation with a prepared statement that binds parameters,
-            and hash passwords with <code>password_hash()</code> / <code>password_verify()</code>
-            instead of comparing plaintext:
+            The root cause is the same as in the UNION lab: user input is glued into
+            the SQL string. The fix is a <strong>prepared statement</strong> plus
+            <strong>hashed passwords</strong>:
         </p>
         <pre><code>$stmt = $db-&gt;prepare(
     "SELECT * FROM users WHERE username = :u"
@@ -167,6 +201,15 @@ $user = $stmt-&gt;fetch(PDO::FETCH_ASSOC);
 if ($user &amp;&amp; password_verify($password, $user['password_hash'])) {
     // login ok
 }</code></pre>
+        <ul>
+            <li><code>prepare()</code> + <code>:u</code> sends the query template to the
+                database first; the user value is sent <em>separately</em> as data, so
+                <code>' OR 1=1 --&nbsp;</code> is treated as a literal username to compare
+                with, not as SQL syntax.</li>
+            <li>The password is checked in PHP with <code>password_verify()</code> against
+                a stored bcrypt hash, never compared as plaintext - so even if the user
+                table leaks later, the passwords don&apos;t.</li>
+        </ul>
         <p>
             Note: this is for your reference only. We are intentionally <em>not</em> fixing
             <code>login.php</code> in this codebase, because the bug is the lesson.

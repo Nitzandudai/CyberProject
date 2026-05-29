@@ -44,14 +44,19 @@ academy_layout_start($lesson['title']);
     </div>
 </section>
 
-<!-- 2. TASK 1 - LOCATE THE INJECTION POINT -->
+<!-- 2. TASK 1 - LOCATE THE SINK AND CONFIRM SQLi -->
 <section class="academy-block">
-    <h2>2. Task 1 - locate the injection point</h2>
+    <h2>2. Task 1 - locate the sink and confirm SQLi</h2>
     <p>
-        Find a user-controlled parameter in the application that is concatenated directly
-        into a SQL query <em>and</em> whose result rows are rendered back into the HTML.
-        UNION needs both: a way to terminate the original predicate, and a place in the
-        response where injected columns will surface.
+        Find a user-controlled parameter that is concatenated directly into a SQL query
+        <em>and</em> whose result rows are rendered back into the HTML. UNION needs both:
+        a way to terminate the original predicate, and a place in the response where the
+        columns you inject will actually surface.
+    </p>
+    <p>
+        Once you have a candidate, prove the input is reaching the SQL parser by sending
+        a single stray quote. If the page reacts differently from a benign query - ideally
+        with a verbose error - you have your injection point.
     </p>
     <details class="academy-hint">
         <summary>Reveal the injection point</summary>
@@ -72,22 +77,62 @@ $rows = $res-&gt;fetchAll(PDO::FETCH_ASSOC);</code></pre>
             On any SQL error the page even prints the failing query and the PDO message
             back to the browser - a huge help while you iterate on payloads. The result rows
             are rendered as product cards, which is exactly the kind of visible sink UNION
-            needs.
+            needs. A probe like <code>?q=%'</code> closes the <code>LIKE</code> string
+            mid-pattern and immediately trips the &quot;SQL Error&quot; box.
         </p>
     </details>
 </section>
 
-<!-- 3. TASK 2 - EXPLOIT THE INJECTION POINT -->
+<!-- 3. TASK 2 - MAP THE QUERY: COLUMN COUNT AND VISIBLE SLOTS -->
 <section class="academy-block">
-    <h2>3. Task 2 - exploit the injection point</h2>
+    <h2>3. Task 2 - map the query: column count and visible slots</h2>
+    <p>
+        Before you can <code>UNION</code> anything in, the second <code>SELECT</code> has
+        to match the original column count <em>exactly</em>, and you need to know which
+        of those columns the application actually renders into the HTML. Two sub-steps:
+    </p>
     <ol>
-        <li>Determine the number of columns in the underlying <code>SELECT</code>.</li>
-        <li>Identify which of those columns are reflected in the HTML.</li>
-        <li>List the tables in the database via <code>sqlite_master</code>.</li>
         <li>
-            <strong>Goal:</strong> dump every row from the <code>users</code> table and
-            display each <code>username</code> / <code>password</code> pair rendered as a
-            fake product card on the page.
+            <strong>Count the columns.</strong> The classic trick is <code>ORDER BY n</code>
+            with increasing <code>n</code> until the database complains that the column
+            index is out of range. The last index that worked is the column count.
+        </li>
+        <li>
+            <strong>Find the visible columns.</strong> Inject unique string markers like
+            <code>'COL_1','COL_2',...</code> in a <code>UNION SELECT</code> and see which
+            ones appear in the rendered page. Use a junk search term (e.g.
+            <code>ZZZ%'</code>) so the original <code>WHERE</code> matches nothing and only
+            your injected rows render.
+        </li>
+    </ol>
+    <details class="academy-hint">
+        <summary>Reveal the column count and visible slots</summary>
+        <p>
+            <code>ORDER BY 5 --&nbsp;</code> works, <code>ORDER BY 6 --&nbsp;</code>
+            errors - so there are <strong>5 columns</strong>:
+            <code>id, name, price, category, image</code>. Of those, the marker test
+            shows that columns <strong>2</strong> (name, rendered as the product title)
+            and <strong>3</strong> (price, rendered next to the title) are the ones you
+            actually see on screen. Those are your two exfiltration slots.
+        </p>
+    </details>
+</section>
+
+<!-- 4. TASK 3 - DUMP THE USERS TABLE -->
+<section class="academy-block">
+    <h2>4. Task 3 - dump the users table</h2>
+    <ol>
+        <li>List the tables in the database via
+            <code>SELECT name FROM sqlite_master WHERE type='table'</code>, wrapped in a
+            <code>UNION SELECT</code> that respects your column layout from Task 2. Tip:
+            wrap the names in sentinels like <code>printf('!!!%s!!!', name)</code> so you
+            can scrape them out of the HTML with a regex.</li>
+        <li>Pick the <code>users</code> table and place <code>username</code> and
+            <code>password</code> into the two visible column slots you found.</li>
+        <li>
+            <strong>Goal:</strong> render every row from <code>users</code> as a fake
+            product card whose name is the username and whose price is the plaintext
+            password.
         </li>
     </ol>
     <p>
@@ -97,9 +142,9 @@ $rows = $res-&gt;fetchAll(PDO::FETCH_ASSOC);</code></pre>
     </p>
 </section>
 
-<!-- 4. START THE LAB -->
+<!-- 5. START THE LAB -->
 <section class="academy-block">
-    <h2>4. Start the lab</h2>
+    <h2>5. Start the lab</h2>
     <p>The vulnerable search page opens in a new tab. Log in first as
         <code>carlos</code> / <code>1234</code> if you are not already, then try
         simple payloads in the URL bar (<code>?q=...</code>) or in the header
@@ -109,7 +154,7 @@ $rows = $res-&gt;fetchAll(PDO::FETCH_ASSOC);</code></pre>
        target="_blank" rel="noopener">Open vulnerable product search</a>
 </section>
 
-<!-- 5. REVEAL SOLUTION -->
+<!-- 6. REVEAL SOLUTION -->
 <details class="academy-solution" id="academy-solution">
     <summary>Reveal solution (spoilers!)</summary>
     <div class="academy-solution-body">
@@ -184,6 +229,11 @@ $rows = $res-&gt;fetchAll(PDO::FETCH_ASSOC);</code></pre>
         </div>
 
         <h3>How to fix it (for context)</h3>
+        <p>
+            The root cause is that the user&apos;s search term is glued straight into the
+            SQL string with <code>"...LIKE '%$q%'"</code>. The fix is to switch to a
+            <strong>prepared statement with a bound parameter</strong>:
+        </p>
         <pre><code>$stmt = $db-&gt;prepare(
     "SELECT id, name, price, category, image
        FROM products
@@ -191,8 +241,32 @@ $rows = $res-&gt;fetchAll(PDO::FETCH_ASSOC);</code></pre>
 );
 $stmt-&gt;execute([':q' =&gt; '%' . $q . '%']);
 $rows = $stmt-&gt;fetchAll(PDO::FETCH_ASSOC);</code></pre>
-        <p>And, while you are there: stop printing PDO error messages to the browser, and
-            hash the passwords.</p>
+        <p>What changes here:</p>
+        <ul>
+            <li><code>prepare()</code> sends the SQL <em>template</em> to the database
+                first, with a placeholder <code>:q</code> where the value will go. The
+                database parses and plans the query at this point - no user input is
+                involved yet, so there is nothing to inject into.</li>
+            <li><code>execute([':q' =&gt; ...])</code> sends the user value
+                <em>separately</em>, as pure data. Even if <code>$q</code> is something
+                like <code>' UNION SELECT password FROM users --</code>, the database
+                treats the whole string as a literal pattern to match with
+                <code>LIKE</code>. The injected SQL is never parsed as SQL.</li>
+        </ul>
+        <p>Two more things you should fix while you are in there:</p>
+        <ul>
+            <li><strong>Stop printing PDO error messages to the browser.</strong> The
+                current page shows the failing query and the SQLite error in a red box,
+                which hands an attacker the exact query shape on the very first probe. In
+                production, log the error server-side and show the user a generic
+                &quot;Something went wrong.&quot;</li>
+            <li><strong>Hash the passwords.</strong> Even after the UNION is closed, the
+                <code>users</code> table still stores passwords in plaintext - so any
+                future read-access bug (a different SQLi, a backup leak, an insider)
+                hands over every account. Store
+                <code>password_hash($pw, PASSWORD_DEFAULT)</code> and verify with
+                <code>password_verify()</code>; never store the password itself.</li>
+        </ul>
     </div>
 </details>
 

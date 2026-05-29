@@ -35,7 +35,7 @@ return [
         'difficulty' => 'Easy',
         'target_url' => '../login.php',
         'scripts'    => ['../scripts/SQLi.py'],
-        'status'     => 'coming_soon',
+        'status'     => 'ready',
     ],
 
     'sqli-union' => [
@@ -45,17 +45,17 @@ return [
         'difficulty' => 'Medium',
         'target_url' => '../products.php',
         'scripts'    => ['../scripts/SQLi_UNION.py'],
-        'status'     => 'coming_soon',
+        'status'     => 'ready',
     ],
 
     'sqli-blind' => [
         'title'      => 'Blind SQL Injection',
-        'short'      => 'Leak secret data one bit at a time using boolean / content-based blind injection.',
+        'short'      => 'Leak secret data one character at a time using time-based blind injection.',
         'category'   => 'Injection',
         'difficulty' => 'Hard',
-        'target_url' => '../products.php',
+        'target_url' => '../cart.php',
         'scripts'    => ['../scripts/SQLi_Blind.py'],
-        'status'     => 'coming_soon',
+        'status'     => 'ready',
     ],
 
     'xss-reflected' => [
@@ -114,7 +114,7 @@ return [
             '../scripts/win_iphone.html',
             '../admin_reply.php',
         ],
-        'status'     => 'coming_soon',
+        'status'     => 'ready',
     ],
 
     /* ===== Capstone chains (split from Master_kill_chain.py) ===== */

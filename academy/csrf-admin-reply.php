@@ -75,9 +75,57 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 </section>
 
-<!-- 2. TASK -->
+<!-- 2. TASK 1 - FIND A STATE-CHANGING ADMIN ENDPOINT -->
 <section class="academy-block">
-    <h2>2. Your task</h2>
+    <h2>2. Task 1 - find a state-changing admin endpoint</h2>
+    <p>
+        Browse the site as <code>admin</code> and look for a POST that <em>changes
+        state</em> (writes to the database, edits content, etc.) and whose only proof
+        of identity is the session cookie - no CSRF token in the form, no
+        <code>Origin</code>/<code>Referer</code> validation on the handler. That
+        combination is what CSRF needs: the browser will auto-send the cookie from any
+        origin, so a page on attacker.example.com can fire the same POST and the
+        server cannot tell the difference.
+    </p>
+    <details class="academy-hint">
+        <summary>Reveal the vulnerable endpoint</summary>
+        <p>
+            It is <code>admin_reply.php</code>. The admin uses it from any product page
+            to post an &quot;Official Store Reply&quot; under a review. The handler
+            only checks the admin session - nothing else:
+        </p>
+        <pre><code>// admin_reply.php
+session_start();
+
+if (!isset($_SESSION["is_admin"]) || $_SESSION["is_admin"] != 1) {
+    die("Unauthorized access.");
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $db = new PDO('sqlite:' . __DIR__ . '/app.db');
+    $review_id     = (int)$_POST['review_id'];
+    $reply_content = $_POST['reply_content'];
+
+    $stmt = $db-&gt;prepare("UPDATE reviews SET admin_reply = ? WHERE id = ?");
+    $stmt-&gt;execute([$reply_content, $review_id]);
+
+    header("Location: " . $_SERVER['HTTP_REFERER']);
+}</code></pre>
+        <p>What the server is <em>not</em> checking:</p>
+        <ul>
+            <li>No CSRF token in the POST body.</li>
+            <li>No <code>Origin</code> or <code>Referer</code> header validation.</li>
+            <li>No <code>SameSite</code> attribute on the session cookie, so the cookie
+                travels on cross-origin POSTs by default.</li>
+            <li>No re-authentication for an action that modifies public-facing store
+                content.</li>
+        </ul>
+    </details>
+</section>
+
+<!-- 3. TASK 2 - WEAPONISE AN HTML PAGE -->
+<section class="academy-block">
+    <h2>3. Task 2 - weaponise an HTML page</h2>
     <ol>
         <li>Log in as <code>admin</code> on the target site. You can use the seeded
             account, or chain this lab on top of the
@@ -86,27 +134,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <li>Open an electronics product page (e.g. <code>product_view.php?id=81</code>)
             and note the current reviews - none of them have an &quot;Official Store
             Reply&quot; block yet.</li>
-        <li>Build an HTML page (or use the one already in
-            <code>scripts/win_iphone.html</code>) that, when loaded by the admin&apos;s
-            browser, sends POST requests to <code>admin_reply.php</code> on behalf of
-            the admin.</li>
+        <li>Build an HTML page (or reuse <code>scripts/win_iphone.html</code>) that,
+            when loaded by the admin&apos;s browser, fires a POST to
+            <code>admin_reply.php</code> for every <code>review_id</code> from 1 to
+            100. Use one hidden <code>&lt;iframe&gt;</code> per form so the attacker
+            page doesn&apos;t navigate away after the first submit.</li>
+        <li>Dress the page up so the victim has no reason to suspect anything
+            (&quot;You won an iPhone!&quot;) and redirect them off to Google a couple
+            of seconds later so the broken-looking page disappears.</li>
         <li>
-            <strong>Goal:</strong> after the admin loads your page once, every review
-            on the site (or at least the first 100) shows an &quot;Official Store
-            Reply&quot; that you wrote - without the admin ever clicking
+            <strong>Goal:</strong> after the admin loads your page once, every
+            review on the site (or at least the first 100) shows an &quot;Official
+            Store Reply&quot; that you wrote - without the admin ever clicking
             &quot;Post Official Reply&quot;.
         </li>
     </ol>
     <p>
-        Use the &quot;Reset databases&quot; button on the academy index when you&apos;re
-        done; this lab dirties every <code>admin_reply</code> in the
+        Use the &quot;Reset databases&quot; button on the academy index when
+        you&apos;re done; this lab dirties every <code>admin_reply</code> in the
         <code>reviews</code> table.
     </p>
+
 </section>
 
-<!-- 3. START THE LAB -->
+<!-- 4. START THE LAB -->
 <section class="academy-block">
-    <h2>3. Start the lab</h2>
+    <h2>4. Start the lab</h2>
     <p>
         Opens an electronics product page so you can see the &quot;before&quot;
         state. Make sure you are logged in as <code>admin</code> / <code>admin123</code>,
@@ -117,7 +170,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
        target="_blank" rel="noopener">Open vulnerable product page</a>
 </section>
 
-<!-- 4. REVEAL SOLUTION -->
+<!-- 5. REVEAL SOLUTION -->
 <details class="academy-solution" id="academy-solution">
     <summary>Reveal solution (spoilers!)</summary>
     <div class="academy-solution-body">
