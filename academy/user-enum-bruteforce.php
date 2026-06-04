@@ -153,13 +153,15 @@ register_submit=</code></pre>
                 10-entry dictionary cracks at least one account on a typical seed.</li>
         </ul>
 
-        <h3>Automated exploit</h3>
-        <p>
-            The script wires both phases together and prints a summary at the end.
-        </p>
-        <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../scripts/enum_and_brute.py'); ?>
-        </div>
+        <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 600;">Bonus: automated exploit</summary>
+            <p style="margin-top: 0.75rem;">
+                The script wires both phases together and prints a summary at the end.
+            </p>
+            <div class="academy-script">
+                <?php highlight_file(__DIR__ . '/../scripts/enum_and_brute.py'); ?>
+            </div>
+        </details>
 
         <h3>How to fix it (for context)</h3>
         <ul>

@@ -142,17 +142,23 @@ new_password=hunter2</code></pre>
             <li>On successful reset: delete the token row, invalidate all the
                 user&apos;s sessions, send a notification email.</li>
             <li>Rate-limit reset requests per IP / per account.</li>
+            <li>Never confirm whether a username or email exists in the system during
+                the reset flow - use a generic message like "If an account with that
+                email exists, a reset link has been sent." Revealing existence enables
+                account enumeration.</li>
         </ul>
 
-        <h3>Automated exploit</h3>
-        <p>
-            The script has two functions: a brute-force fallback against
-            <code>login.php</code> using a wordlist, and the actual reset bypass via
-            <code>run_reset_password()</code>.
-        </p>
-        <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../scripts/Broken_Password_Reset.py'); ?>
-        </div>
+        <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 600;">Bonus: automated exploit</summary>
+            <p style="margin-top: 0.75rem;">
+                The script has two functions: a brute-force fallback against
+                <code>login.php</code> using a wordlist, and the actual reset bypass via
+                <code>run_reset_password()</code>.
+            </p>
+            <div class="academy-script">
+                <?php highlight_file(__DIR__ . '/../scripts/Broken_Password_Reset.py'); ?>
+            </div>
+        </details>
 
         <h3>How to fix it (for context)</h3>
         <pre><code>// At the top of reset_password.php

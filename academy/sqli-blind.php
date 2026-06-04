@@ -248,14 +248,16 @@ apply_coupon=1</code></pre>
             the end of the string. The full value is <code>ANAN-VIP-2026</code>.
         </p>
 
-        <h3>Automated exploit</h3>
-        <p>
-            The script automates the baseline, the alphabet walk, table discovery, and the
-            character-by-character data leak.
-        </p>
-        <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../scripts/SQLi_Blind.py'); ?>
-        </div>
+        <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 600;">Bonus: automated exploit</summary>
+            <p style="margin-top: 0.75rem;">
+                The script automates the baseline, the alphabet walk, table discovery, and the
+                character-by-character data leak.
+            </p>
+            <div class="academy-script">
+                <?php highlight_file(__DIR__ . '/../scripts/SQLi_Blind.py'); ?>
+            </div>
+        </details>
 
         <h3>How to fix it (for context)</h3>
         <ul>

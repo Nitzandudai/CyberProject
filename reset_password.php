@@ -9,8 +9,10 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 
-//getting the user to reset from the URL (IDOR)
-$user_to_reset = $_GET['user'] ?? null; //if the user doesnt exist return null
+// Vulnerability: the account to reset is taken directly from the URL.
+// The server does not verify that the requester owns this account
+// or has completed a valid password reset flow.
+$user_to_reset = $_GET['user'] ?? null;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && $user_to_reset) {
     $new_password = $_POST['new_password'];

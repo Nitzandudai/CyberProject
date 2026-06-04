@@ -162,13 +162,15 @@ document.location =
             <code>home.php</code>. You are now logged in as the victim.
         </p>
 
-        <h3>Automated link builder</h3>
-        <p>This script just builds the URL - there is nothing else to automate, because
-            actual exploitation requires a human to click. You would normally run the
-            catcher on a server you control on the same network.</p>
-        <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../scripts/Reflected_XSS_Attack_Link_Builder.py'); ?>
-        </div>
+        <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 600;">Bonus: automated link builder</summary>
+            <p style="margin-top: 0.75rem;">This script just builds the URL - there is nothing else to automate, because
+                actual exploitation requires a human to click. You would normally run the
+                catcher on a server you control on the same network.</p>
+            <div class="academy-script">
+                <?php highlight_file(__DIR__ . '/../scripts/Reflected_XSS_Attack_Link_Builder.py'); ?>
+            </div>
+        </details>
 
         <h3>How to fix it (for context)</h3>
         <ul>
