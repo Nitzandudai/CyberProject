@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/_layout.php';
 
-$lessons = require __DIR__ . '/lessons.php';
+$lessons = require_once __DIR__ . '/lessons.php';
 $lesson  = $lessons['chain-web-shell'];
 
 academy_layout_start($lesson['title']);
@@ -28,8 +28,9 @@ $web_shell_exists = file_exists($web_shell_path);
         Capstones chain several individual labs into a complete attack scenario. This one
         models a typical opportunistic intrusion:
         <strong>discover users &rarr; gain a foothold &rarr; achieve remote code execution via web shell</strong>.
-        Each stage falls back to the next if it fails, so the chain succeeds on a wide
-        range of database states.
+        The access phase has three escalating methods - cheap password spray, intensive
+        brute force, then broken password reset - falling back to the next if the previous
+        one fails, so the chain succeeds on a wide range of database states.
     </p>
     <p>The phases:</p>
     <ol>
@@ -37,8 +38,8 @@ $web_shell_exists = file_exists($web_shell_path);
             <code>login.php?view=register</code> to find which names from
             <code>scripts/usernames.txt</code> are real accounts. Spray the top common
             passwords against each as you go (a &quot;cheap pass&quot;).</li>
-        <li><strong>Access.</strong> If the cheap pass found a working credential, stop.
-            Otherwise launch <em>intensive</em> brute force using
+        <li><strong>Access.</strong> If the cheap pass found a working credential, you can stop.
+            Otherwise launch <em>intensive</em> brute force, you can use
             <code>scripts/passwords.txt</code>. If that also fails, fall back to the
             <a href="broken-password-reset.php">broken password reset</a> - which always
             succeeds because it has no token.</li>
@@ -126,7 +127,7 @@ $web_shell_exists = file_exists($web_shell_path);
                 <a href="broken-password-reset.php">Broken Password Reset</a> lab.</li>
         </ol>
 
-        <h3>Phase 3 - RCE via file upload (the actual trick)</h3>
+        <h3>Phase 3 - Web Shell (the actual trick)</h3>
         <p>
             <code>home.php</code> requires an ID-photo upload when adding an alcohol
             product to the cart. The upload sink does almost no validation:
@@ -221,7 +222,24 @@ payload = open_tag + b" if(isset(" + var_part + key_part + b")) { " \
             master script. Run with: <code>python scripts/Master_kill_chain.py 1</code>.
         </p>
         <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../scripts/Master_kill_chain.py'); ?>
+            <?php
+            $src = file_get_contents(__DIR__ . '/../scripts/Master_kill_chain.py');
+            if ($src === false) {
+                echo '<p class="academy-solution-warning">Script file could not be loaded.</p>';
+            } else {
+                $p2 = strpos($src, "\ndef chain_2_breach");
+                $pm = strpos($src, "\ndef main");
+                if ($p2 === false || $pm === false) {
+                    echo '<p class="academy-solution-warning">Script markers not found - has Master_kill_chain.py been renamed?</p>';
+                } else {
+                    $excerpt = substr($src, 0, $p2)
+                             . "\n\n# --- chain_2_breach() and chain_3_stealth() defined here ---"
+                             . "\n# --- see the other capstone labs for those chains           ---\n\n"
+                             . substr($src, $pm + 1);
+                    highlight_string($excerpt);
+                }
+            }
+            ?>
         </div>
 
         <h3>How to fix it (for context)</h3>
