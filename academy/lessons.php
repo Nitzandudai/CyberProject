@@ -117,6 +117,19 @@ return [
         'status'     => 'ready',
     ],
 
+    'csrf-account-takeover' => [
+        'title'      => 'CSRF: Silent Account Takeover',
+        'short'      => 'Lure any logged-in user to an attacker page that silently changes their password via a no-token POST to the profile endpoint.',
+        'category'   => 'Cross-Site Request Forgery',
+        'difficulty' => 'Medium',
+        'target_url' => '../profile.php',
+        'scripts'    => [
+            '../scripts/free_giftcard.html',
+            '../profile.php',
+        ],
+        'status'     => 'ready',
+    ],
+
     /* ===== Capstone chains (split from Master_kill_chain.py) ===== */
 
     'chain-web-shell' => [
