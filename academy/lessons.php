@@ -81,6 +81,19 @@ return [
         'status'     => 'ready',
     ],
 
+    'xss-dom' => [
+        'title'      => 'DOM-based XSS',
+        'short'      => 'Smuggle JavaScript through a URL fragment that never reaches the server, exploiting an unsafe innerHTML sink in client-side code.',
+        'category'   => 'Cross-Site Scripting',
+        'difficulty' => 'Medium',
+        'target_url' => '../product_view.php?id=1',
+        'scripts'    => [
+            '../scripts/DOM_XSS_Attack_Link_Builder.py',
+            '../AttackerServer/catcher.php',
+        ],
+        'status'     => 'ready',
+    ],
+
     'broken-password-reset' => [
         'title'      => 'Broken Password Reset',
         'short'      => 'Take over an arbitrary account by abusing flaws in the password-reset flow.',
