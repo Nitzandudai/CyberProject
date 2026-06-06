@@ -35,6 +35,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit_review"])) {
 $revStmt = $db->prepare("SELECT * FROM reviews WHERE product_id = ? ORDER BY date DESC");
 $revStmt->execute([$product_id]);
 $reviews = $revStmt->fetchAll(PDO::FETCH_ASSOC);
+
+$productInfo = null;
+if ($product['category'] === 'snacks_dry') {
+    $infoStmt = $db->prepare("SELECT ingredients, allergens, nutrition FROM product_info WHERE product_id = ?");
+    $infoStmt->execute([$product_id]);
+    $productInfo = $infoStmt->fetch(PDO::FETCH_ASSOC) ?: null;
+}
 ?>
 
 <!DOCTYPE html>
@@ -129,6 +136,74 @@ $reviews = $revStmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
             <?php endforeach; ?>
         </div>
+    <?php endif; ?>
+
+    <?php if ($product['category'] === 'snacks_dry' && $productInfo): ?>
+        <hr style="margin: 50px 0; border: 0; border-top: 2px solid #f1f5f9;">
+        <h2 style="margin-bottom: 25px;">Product Information</h2>
+
+        <div class="product-tabs">
+            <div class="product-tabs-strip" style="display:flex; gap:10px; margin-bottom:14px;">
+                <a href="#tab=ingredients" class="product-tab" data-tab="ingredients"
+                   style="padding:10px 18px; border-radius:10px; border:1px solid #cbd5e1; background:#f8fafc; color:#1e293b; text-decoration:none; font-weight:600;">Ingredients</a>
+                <a href="#tab=allergens" class="product-tab" data-tab="allergens"
+                   style="padding:10px 18px; border-radius:10px; border:1px solid #cbd5e1; background:#f8fafc; color:#1e293b; text-decoration:none; font-weight:600;">Allergens</a>
+                <a href="#tab=nutrition" class="product-tab" data-tab="nutrition"
+                   style="padding:10px 18px; border-radius:10px; border:1px solid #cbd5e1; background:#f8fafc; color:#1e293b; text-decoration:none; font-weight:600;">Nutrition</a>
+            </div>
+
+            <div id="tab-label" style="margin: 0 0 14px; color:#475569; font-style: italic;">
+                Pick a tab to see more details about this product.
+            </div>
+
+            <div class="product-tab-panel" data-tab="ingredients" style="display:none; background:white; padding:20px; border-radius:12px; border:1px solid #e6e8eb;">
+                <h3 style="margin-top:0;">Ingredients</h3>
+                <p><?php echo nl2br(htmlspecialchars($productInfo['ingredients'])); ?></p>
+            </div>
+
+            <div class="product-tab-panel" data-tab="allergens" style="display:none; background:white; padding:20px; border-radius:12px; border:1px solid #e6e8eb;">
+                <h3 style="margin-top:0;">Allergens</h3>
+                <p><?php echo nl2br(htmlspecialchars($productInfo['allergens'])); ?></p>
+            </div>
+
+            <div class="product-tab-panel" data-tab="nutrition" style="display:none; background:white; padding:20px; border-radius:12px; border:1px solid #e6e8eb;">
+                <h3 style="margin-top:0;">Nutrition (per 100g)</h3>
+                <p><?php echo nl2br(htmlspecialchars($productInfo['nutrition'])); ?></p>
+            </div>
+        </div>
+
+        <script>
+        (function () {
+            var label  = document.getElementById('tab-label');
+            var panels = document.querySelectorAll('.product-tab-panel');
+            var tabs   = document.querySelectorAll('.product-tab');
+
+            function applyHash() {
+                var raw = location.hash.slice(1); // strip leading '#'
+
+                if (!raw) {
+                    label.innerHTML = 'Pick a tab to see more details about this product.';
+                    panels.forEach(function (p) { p.style.display = 'none'; });
+                    tabs.forEach(function (t) { t.style.background = '#f8fafc'; });
+                    return;
+                }
+
+                label.innerHTML = 'Showing section: ' + raw;
+
+                var match  = raw.match(/^tab=([a-zA-Z]+)/);
+                var wanted = match ? match[1] : null;
+                panels.forEach(function (p) {
+                    p.style.display = (p.dataset.tab === wanted) ? 'block' : 'none';
+                });
+                tabs.forEach(function (t) {
+                    t.style.background = (t.dataset.tab === wanted) ? '#e0e7ff' : '#f8fafc';
+                });
+            }
+
+            window.addEventListener('hashchange', applyHash);
+            applyHash();
+        })();
+        </script>
     <?php endif; ?>
 </main>
 </body>
