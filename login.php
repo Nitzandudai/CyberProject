@@ -70,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login_submit'])) {
             $_SESSION["is_admin"] = 0;
         }
         
-        header("Location: home.php");
+        header("Location: home.php?msg=" . urlencode("Welcome back, " . $user['username'] . "!"));
         exit;
     }
 }

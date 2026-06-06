@@ -24,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["add_id"])) {
     if ($productCategory === "alcohol") {
         $hasIdPhoto = isset($_FILES["id_photo"]) && $_FILES["id_photo"]["error"] === UPLOAD_ERR_OK;
         if (!$hasIdPhoto) {
-            header("Location: home.php?id_required=1");
+            header("Location: home.php?msg=" . urlencode("ID photo required for alcohol purchases."));
             exit;
         }
 
@@ -44,7 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["add_id"])) {
     }
 
     $_SESSION["cart"][$id] = ($_SESSION["cart"][$id] ?? 0) + 1;
-    header("Location: home.php");
+    header("Location: home.php?msg=" . urlencode("Added to cart."));
     exit;
 }
 
