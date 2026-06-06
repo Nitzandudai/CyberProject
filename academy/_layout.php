@@ -61,7 +61,7 @@ if (!function_exists('academy_layout_start')) {
      * Renders nothing if there are no related labs.
      */
     function academy_render_related_labs(string $current_slug): void {
-        $lessons = require __DIR__ . '/lessons.php';
+        $lessons = require_once __DIR__ . '/lessons.php';
         if (!isset($lessons[$current_slug])) {
             return;
         }

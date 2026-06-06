@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/_layout.php';
 
-$lessons = require __DIR__ . '/lessons.php';
+$lessons = require_once __DIR__ . '/lessons.php';
 $lesson  = $lessons['chain-stealth-leak'];
 
 academy_layout_start($lesson['title']);
@@ -123,7 +123,26 @@ username=' OR 1=1 -- &amp;password=anything&amp;login_submit=</code></pre>
             the two scripts together - note how it injects the stolen session straight
             into <code>SQLi_Blind.COOKIES['PHPSESSID']</code> before running the leak.</p>
         <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../scripts/Master_kill_chain.py'); ?>
+            <?php
+            $src = file_get_contents(__DIR__ . '/../scripts/Master_kill_chain.py');
+            if ($src === false) {
+                echo '<p class="academy-solution-warning">Script file could not be loaded.</p>';
+            } else {
+                $p1 = strpos($src, "\ndef chain_1_web_shell");
+                $p3 = strpos($src, "\ndef chain_3_stealth");
+                $pm = strpos($src, "\ndef main");
+                if ($p1 === false || $p3 === false || $pm === false) {
+                    echo '<p class="academy-solution-warning">Script markers not found - has Master_kill_chain.py been renamed?</p>';
+                } else {
+                    $excerpt = substr($src, 0, $p1 + 1)
+                             . "# --- chain_1_web_shell() defined in chain-web-shell lab ---"
+                             . "\n# --- chain_2_breach() defined in chain-data-breach lab ---\n\n"
+                             . substr($src, $p3 + 1, $pm - $p3 - 1)
+                             . "\n" . substr($src, $pm + 1);
+                    highlight_string($excerpt);
+                }
+            }
+            ?>
         </div>
 
         <h3>How to fix it (for context)</h3>

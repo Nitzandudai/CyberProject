@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/_layout.php';
 
-$lessons = require __DIR__ . '/lessons.php';
+$lessons = require_once __DIR__ . '/lessons.php';
 $lesson  = $lessons['sqli-login'];
 
 academy_layout_start($lesson['title']);
@@ -166,15 +166,17 @@ password: anything</code></pre>
             in that row.
         </p>
 
-        <h3>Automated exploit</h3>
-        <p>
-            The script below reproduces the attack programmatically. It detects success by
-            looking for the <code>302</code> redirect to <code>home.php</code> and returns
-            the resulting <code>PHPSESSID</code>, which can be reused for further attacks.
-        </p>
-        <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../scripts/SQLi.py'); ?>
-        </div>
+        <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 600;">Bonus: automated exploit</summary>
+            <p style="margin-top: 0.75rem;">
+                The script below reproduces the attack programmatically. It detects success by
+                looking for the <code>302</code> redirect to <code>home.php</code> and returns
+                the resulting <code>PHPSESSID</code>, which can be reused for further attacks.
+            </p>
+            <div class="academy-script">
+                <?php highlight_file(__DIR__ . '/../scripts/SQLi.py'); ?>
+            </div>
+        </details>
 
         <h3>How to fix it (for context)</h3>
         <p>

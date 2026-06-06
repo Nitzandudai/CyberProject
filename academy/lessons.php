@@ -159,7 +159,7 @@ return [
             '../scripts/SQLi_UNION.py',
             '../scripts/stored_xss.py',
         ],
-        'status'        => 'coming_soon',
+        'status'        => 'ready',
         'prerequisites' => ['sqli-union', 'xss-stored'],
     ],
 

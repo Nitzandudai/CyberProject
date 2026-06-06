@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/_layout.php';
 
-$lessons = require __DIR__ . '/lessons.php';
+$lessons = require_once __DIR__ . '/lessons.php';
 $lesson  = $lessons['xss-stored'];
 
 academy_layout_start($lesson['title']);
@@ -180,14 +180,16 @@ foreach ($reviews as $rev) {
             is part of the attack design, not an afterthought.
         </p>
 
-        <h3>Automated exploit</h3>
-        <p>
-            The script logs in (defaults to <code>HUCKER</code> / <code>hucker123</code>),
-            then POSTs the malicious review to the target product.
-        </p>
-        <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../scripts/stored_xss.py'); ?>
-        </div>
+        <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 600;">Bonus: automated exploit</summary>
+            <p style="margin-top: 0.75rem;">
+                The script logs in (defaults to <code>HUCKER</code> / <code>hucker123</code>),
+                then POSTs the malicious review to the target product.
+            </p>
+            <div class="academy-script">
+                <?php highlight_file(__DIR__ . '/../scripts/stored_xss.py'); ?>
+            </div>
+        </details>
 
         <h3>How to fix it (for context)</h3>
         <ul>

@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/_layout.php';
 
-$lessons = require __DIR__ . '/lessons.php';
+$lessons = require_once __DIR__ . '/lessons.php';
 $lesson  = $lessons['chain-data-breach'];
 
 academy_layout_start($lesson['title']);
@@ -30,16 +30,14 @@ academy_layout_start($lesson['title']);
     <ol>
         <li><strong>Foothold.</strong> Log in as the seeded test account
             <code>HUCKER</code> (<code>hucker123</code>) to obtain a valid
-            <code>PHPSESSID</code>. In a real engagement this would be a phished credential
-            or an account created via the registration form.</li>
+            <code>PHPSESSID</code>. In a real engagement this would be a self-registered account.</li>
         <li><strong>Database exfiltration.</strong> Reuse the session to drive a
-            UNION-based SQL injection against the product search and dump the entire
+            SQL injection vulnerability and dump the entire
             <code>users</code> table with plaintext passwords.</li>
         <li><strong>Lateral movement &amp; persistence.</strong> Pick a non-admin victim
-            from the dump (the script chooses the <em>last</em> row to avoid the
-            <code>admin</code> at the top) and log in as them. From that account, plant a
-            stored-XSS payload on the electric kettle product page so every future visitor
-            - including legitimate admins - leaks their session cookie to the attacker.</li>
+            from the dump and log in as them. From that account, plant a stored-XSS
+            payload on a product page so every future visitor - including legitimate
+            admins - leaks their session cookie to the attacker.</li>
     </ol>
     <p>
         The brilliance is in the laundering: the SQL injection is performed under
@@ -53,16 +51,18 @@ academy_layout_start($lesson['title']);
 <section class="academy-block">
     <h2>2. Your task</h2>
     <ol>
-        <li>Confirm <code>HUCKER</code> / <code>hucker123</code> exists in the seeded
-            <code>app.db</code> by logging in manually.</li>
-        <li>Reproduce Phase 2 by walking through the
-            <a href="sqli-union.php">UNION SQLi</a> lab using HUCKER&apos;s session.</li>
-        <li>Pick a non-admin user from the dump and replicate Phase 3 from the
-            <a href="xss-stored.php">Stored XSS</a> lab using their credentials.</li>
-        <li>Run <code>python scripts/Master_kill_chain.py 2</code> end to end and
-            confirm a stolen cookie lands in
+        <li>Log in as <code>HUCKER</code> / <code>hucker123</code> and keep the session
+            cookie - you will use it to authenticate the SQL injection in the next step.</li>
+        <li>Using HUCKER&apos;s <code>PHPSESSID</code>, walk through the
+            <a href="sqli-union.php">UNION SQLi</a> lab and dump the full
+            <code>users</code> table.</li>
+        <li>Pick any non-admin user from the dump, log in as them, then walk through the
+            <a href="xss-stored.php">Stored XSS</a> lab to plant a cookie-stealing payload
+            on a product page under that stolen identity.</li>
+        <li>Run <code>python scripts/Master_kill_chain.py 2</code> to execute all three
+            phases unattended and confirm a stolen cookie lands in
             <code>AttackerServer/stolen_cookies.txt</code> when a second browser visits
-            <code>product_view.php?id=81</code>.</li>
+            the product page.</li>
     </ol>
 </section>
 
@@ -85,7 +85,7 @@ academy_layout_start($lesson['title']);
             it&apos;s much more rewarding to assemble them than to read the orchestration.
         </p>
 
-        <h3>Phase 0 - pick up a session</h3>
+        <h3>Phase 1 - pick up a session</h3>
         <pre><code>POST /CyberProject/login.php
 username=HUCKER&amp;password=hucker123&amp;login_submit=</code></pre>
         <p>
@@ -93,7 +93,7 @@ username=HUCKER&amp;password=hucker123&amp;login_submit=</code></pre>
             <code>response.cookies['PHPSESSID']</code>.
         </p>
 
-        <h3>Phase 1 - dump users with UNION SQLi</h3>
+        <h3>Phase 2 - dump users with UNION SQLi</h3>
         <p>
             Using the captured session cookie, drive the
             <a href="sqli-union.php">UNION SQLi</a> attack against
@@ -101,9 +101,12 @@ username=HUCKER&amp;password=hucker123&amp;login_submit=</code></pre>
             <code>(username, password)</code> tuples for every user in the database.
         </p>
 
-        <h3>Phase 2 - lateral move &amp; stored XSS</h3>
+        <h3>Phase 3 - lateral move &amp; stored XSS</h3>
         <p>
-            Pick a non-admin user (the script just takes <code>users[-1]</code>). Log in
+            Pick a non-admin user (the script takes <code>users[-1]</code> - the last
+            row in the dump. Database rows are ordered by insertion time, so the admin
+            account, created first when the database was seeded, sits near the top;
+            taking the last row avoids accidentally using it). Log in
             as them. POST the
             <a href="xss-stored.php">stored-XSS</a> payload to
             <code>product_view.php?id=81</code> (electric kettle, an electronics product
@@ -119,13 +122,36 @@ username=HUCKER&amp;password=hucker123&amp;login_submit=</code></pre>
                 fix to the UNION SQLi - the malicious row stays in the DB until it&apos;s
                 explicitly removed.</li>
             <li>If an admin visits the kettle page, their cookie is exfiltrated too -
-                privilege escalation falls out for free.</li>
+                privilege escalation falls out for free. Many real platforms notify
+                administrators about new or flagged reviews, which means planting a
+                malicious review actively draws the admin to the page rather than
+                waiting passively for them to stumble across it.</li>
         </ul>
 
         <h3>Orchestration script</h3>
         <p>Run with: <code>python scripts/Master_kill_chain.py 2</code>.</p>
         <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../scripts/Master_kill_chain.py'); ?>
+            <?php
+            $src = file_get_contents(__DIR__ . '/../scripts/Master_kill_chain.py');
+            if ($src === false) {
+                echo '<p class="academy-solution-warning">Script file could not be loaded.</p>';
+            } else {
+                $p1 = strpos($src, "\ndef chain_1_web_shell");
+                $p2 = strpos($src, "\ndef chain_2_breach");
+                $p3 = strpos($src, "\ndef chain_3_stealth");
+                $pm = strpos($src, "\ndef main");
+                if ($p1 === false || $p2 === false || $p3 === false || $pm === false) {
+                    echo '<p class="academy-solution-warning">Script markers not found - has Master_kill_chain.py been renamed?</p>';
+                } else {
+                    $excerpt = substr($src, 0, $p1 + 1)
+                             . "# --- chain_1_web_shell() defined here (see chain-web-shell lab) ---\n\n"
+                             . substr($src, $p2 + 1, $p3 - $p2 - 1)
+                             . "\n# --- chain_3_stealth() defined here (see chain-stealth-leak lab) ---\n\n"
+                             . substr($src, $pm + 1);
+                    highlight_string($excerpt);
+                }
+            }
+            ?>
         </div>
 
         <h3>How to fix it (for context)</h3>
