@@ -22,45 +22,19 @@ academy_layout_start($lesson['title']);
 <section class="academy-block">
     <h2>1. Theory</h2>
     <p>
-        The previous CSRF lab (<a href="csrf-admin-reply.php">Forced Admin Replies</a>)
-        targeted an <em>admin</em> action. This one shows that CSRF is just as
-        devastating against <em>regular users</em>: any state-changing endpoint that
-        trusts the session cookie alone can be fired by any page the victim happens
-        to open.
+        <strong>Cross-Site Request Forgery (CSRF)</strong> abuses a basic browser
+        behaviour: when a request is sent to a site, the browser may include that
+        site&apos;s cookies automatically, even if the request was triggered from a
+        different origin. If the application relies only on the session cookie to
+        identify the user, then a malicious page may be able to cause the victim&apos;s
+        browser to send an authenticated request to the target application.
     </p>
     <p>
-        The &quot;Personal Details&quot; page (<code>profile.php</code>) lets the
-        logged-in user change their password. The handler does basically nothing
-        beyond &quot;is there a session?&quot;:
+        The same condition applies: any endpoint that accepts a form POST, grants
+        authority based only on the session cookie, and carries no CSRF protection
+        is a target. Find the password-management feature and check whether it is
+        vulnerable - that is Task 1.
     </p>
-    <pre><code>// profile.php (handler)
-session_start();
-if (!isset($_SESSION["username"])) {
-    header("Location: login.php");
-    exit;
-}
-
-if ($_SERVER["REQUEST_METHOD"] === "POST" &amp;&amp; isset($_POST['new_password'])) {
-    $new_password = (string)$_POST['new_password'];
-    $stmt = $db-&gt;prepare("UPDATE users SET password = :p WHERE username = :u");
-    $stmt-&gt;execute([
-        ':p' =&gt; $new_password,
-        ':u' =&gt; $_SESSION['username'],
-    ]);
-}</code></pre>
-    <p>What the server is <em>not</em> checking:</p>
-    <ul>
-        <li>No CSRF token in the POST body.</li>
-        <li>No <code>Origin</code> / <code>Referer</code> header validation.</li>
-        <li>No <code>SameSite</code> attribute on the session cookie - the cookie
-            travels on cross-origin POSTs.</li>
-        <li>
-            <strong>No current-password re-prompt.</strong> A password-change
-            endpoint should always require the <em>old</em> password as proof that
-            the human at the keyboard is the account owner. This one trusts the
-            session alone.
-        </li>
-    </ul>
     <div class="academy-callout">
         <strong>Why this is worse than the admin-reply CSRF.</strong> Posting a
         fake reply is vandalism, and the admin can edit it back. Changing the
@@ -87,9 +61,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" &amp;&amp; isset($_POST['new_password'
             It is <code>profile.php</code> (linked from the top nav as
             &quot;Personal Details&quot;). The &quot;Change password&quot; form
             posts a single <code>new_password</code> field back to the same URL.
-            No hidden token, no current-password input, nothing - just the session
-            cookie the browser already carries.
+            No hidden token, no current-password input, nothing - just the
+            session cookie the browser already carries.
         </p>
+        <p>The handler does basically nothing beyond &quot;is there a session?&quot;:</p>
+        <pre><code>// profile.php (handler)
+session_start();
+if (!isset($_SESSION["username"])) {
+    header("Location: login.php");
+    exit;
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" &amp;&amp; isset($_POST['new_password'])) {
+    $new_password = (string)$_POST['new_password'];
+    $stmt = $db-&gt;prepare("UPDATE users SET password = :p WHERE username = :u");
+    $stmt-&gt;execute([
+        ':p' =&gt; $new_password,
+        ':u' =&gt; $_SESSION['username'],
+    ]);
+}</code></pre>
+        <p>What the server is <em>not</em> checking:</p>
+        <ul>
+            <li>No CSRF token in the POST body.</li>
+            <li>No <code>Origin</code> / <code>Referer</code> header validation.</li>
+            <li>No <code>SameSite</code> attribute on the session cookie - the
+                cookie travels on cross-origin POSTs.</li>
+            <li><strong>No current-password re-prompt.</strong> A password-change
+                endpoint should always require the <em>old</em> password as proof that
+                the human at the keyboard is the account owner. This one trusts the
+                session alone.</li>
+        </ul>
     </details>
 </section>
 
