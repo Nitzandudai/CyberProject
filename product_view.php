@@ -179,7 +179,11 @@ if ($product['category'] === 'snacks_dry') {
             var tabs   = document.querySelectorAll('.product-tab');
 
             function applyHash() {
-                var raw = location.hash.slice(1); // strip leading '#'
+                // Browsers auto-encode special chars in the address bar
+                // (e.g. "<" becomes "%3C"), so we decode before using the
+                // value - just like a real app that wants tab names with
+                // spaces or other characters to work.
+                var raw = decodeURIComponent(location.hash.slice(1));
 
                 if (!raw) {
                     label.innerHTML = 'Pick a tab to see more details about this product.';
