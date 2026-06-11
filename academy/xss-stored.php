@@ -21,6 +21,40 @@ academy_layout_start($lesson['title']);
 <!-- 1. THEORY -->
 <section class="academy-block">
     <h2>1. Theory</h2>
+
+    <h3>What is XSS?</h3>
+    <p>
+        <strong>XSS</strong> stands for <strong>Cross-Site Scripting</strong>. It happens
+        when a website accidentally lets an attacker inject their own JavaScript into a
+        page that another user is viewing. The victim&apos;s browser sees that script
+        as part of the trusted website &mdash; so it runs with full access to the
+        victim&apos;s cookies, session, and anything the user can see or do on the
+        site. In practical terms, a successful XSS often means the attacker can read
+        the victim&apos;s session cookie and log in as them.
+    </p>
+    <p>
+        There are three common flavours of XSS, and the difference is just
+        <em>where the payload lives</em>:
+    </p>
+    <ul>
+        <li><strong>Reflected XSS</strong> &mdash; the payload sits in a link the
+            attacker sends the victim. The server echoes it back into the page, and the
+            victim&apos;s browser executes it.</li>
+        <li><strong>Stored XSS</strong> &mdash; the payload is saved on the server
+            (e.g. in a product review) and served to every later visitor. No crafted
+            link needed.</li>
+        <li><strong>DOM-based XSS</strong> &mdash; the payload never touches the
+            server at all. It lives in a part of the URL the browser keeps to itself,
+            and the page&apos;s own JavaScript is what puts it into the page.</li>
+    </ul>
+    <p class="academy-callout">
+        This lab covers <strong>stored XSS</strong>. The other two variants have
+        their own labs: <a href="xss-reflected.php">Reflected XSS</a> and
+        <a href="xss-dom.php">DOM-based XSS</a>. Each lab is self-contained - no
+        particular order is required.
+    </p>
+
+    <h3>How stored XSS works</h3>
     <p>
         <strong>Stored XSS</strong> (also called &quot;persistent XSS&quot;) is the
         nastier sibling of reflected XSS. Instead of needing the victim to click a crafted

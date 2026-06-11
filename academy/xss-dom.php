@@ -47,6 +47,12 @@ academy_layout_start($lesson['title']);
             server at all. It lives in a part of the URL the browser keeps to itself,
             and the page&apos;s own JavaScript is what puts it into the page.</li>
     </ul>
+    <p class="academy-callout">
+        This lab covers <strong>DOM-based XSS</strong>. The other two variants have
+        their own labs: <a href="xss-reflected.php">Reflected XSS</a> and
+        <a href="xss-stored.php">Stored XSS</a>. Each lab is self-contained - no
+        particular order is required.
+    </p>
 
     <h3>What does &quot;DOM-based&quot; mean?</h3>
     <p>
