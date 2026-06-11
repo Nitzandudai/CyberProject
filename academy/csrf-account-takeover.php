@@ -209,16 +209,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" &amp;&amp; isset($_POST['new_password'
             file would be hosted on <code>attacker.example.com</code> while the
             form action would still point at the victim site.
         </p>
-        <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../scripts/free_giftcard.html'); ?>
-        </div>
+        <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 600;">View free_giftcard.html</summary>
+            <div class="academy-script" style="margin-top: 0.75rem;">
+                <?php highlight_file(__DIR__ . '/../scripts/free_giftcard.html'); ?>
+            </div>
+        </details>
 
         <h3>The vulnerable endpoint</h3>
         <p>For completeness, here is <code>profile.php</code> - note that the
             password-change handler does nothing beyond the session check:</p>
-        <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../profile.php'); ?>
-        </div>
+        <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 600;">View profile.php</summary>
+            <div class="academy-script" style="margin-top: 0.75rem;">
+                <?php highlight_file(__DIR__ . '/../profile.php'); ?>
+            </div>
+        </details>
 
         <h3>Why no Python script for this lab?</h3>
         <p>

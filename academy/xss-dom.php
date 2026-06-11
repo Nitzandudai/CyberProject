@@ -229,11 +229,14 @@ applyHash();</code></pre>
         <h3>Step 4 - the catcher</h3>
         <p>
             Identical to the reflected-XSS lab &mdash; the catcher just records the
-            <code>data</code> query parameter:
+            <code>data</code> query parameter.
         </p>
-        <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../AttackerServer/catcher.php'); ?>
-        </div>
+        <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 600;">View catcher.php</summary>
+            <div class="academy-script" style="margin-top: 0.75rem;">
+                <?php highlight_file(__DIR__ . '/../AttackerServer/catcher.php'); ?>
+            </div>
+        </details>
 
         <h3>Step 5 - replay the cookie</h3>
         <p>
@@ -242,14 +245,16 @@ applyHash();</code></pre>
             You are now logged in as the victim.
         </p>
 
-        <h3>Automated link builder</h3>
-        <p>
-            Like the reflected-XSS builder, this script just assembles the URL &mdash;
-            real exploitation still requires a human to click the link.
-        </p>
-        <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../scripts/DOM_XSS_Attack_Link_Builder.py'); ?>
-        </div>
+        <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 600;">Bonus: automated exploit</summary>
+            <p style="margin-top: 0.75rem;">
+                Like the reflected-XSS builder, this script just assembles the URL &mdash;
+                real exploitation still requires a human to click the link.
+            </p>
+            <div class="academy-script">
+                <?php highlight_file(__DIR__ . '/../scripts/DOM_XSS_Attack_Link_Builder.py'); ?>
+            </div>
+        </details>
 
         <h3>Why DOM XSS is sneakier than reflected XSS</h3>
         <ul>

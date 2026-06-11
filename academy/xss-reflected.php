@@ -181,13 +181,16 @@ document.location =
         <p>
             On the attacker server, <code>catcher.php</code> reads the <code>data</code>
             query parameter, base64-decodes it, and appends it to
-            <code>stolen_cookies.txt</code>:
+            <code>stolen_cookies.txt</code>. It also renders a convincing
+            &quot;Coupon Applied!&quot; page so the victim doesn&apos;t immediately
+            realise anything went wrong.
         </p>
-        <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../AttackerServer/catcher.php'); ?>
-        </div>
-        <p>It also renders a convincing &quot;Coupon Applied!&quot; page so the victim
-            doesn&apos;t immediately realise anything went wrong.</p>
+        <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 600;">View catcher.php</summary>
+            <div class="academy-script" style="margin-top: 0.75rem;">
+                <?php highlight_file(__DIR__ . '/../AttackerServer/catcher.php'); ?>
+            </div>
+        </details>
 
         <h3>Step 5 - replay the cookie</h3>
         <p>
@@ -197,7 +200,7 @@ document.location =
         </p>
 
         <details style="margin-top: 1rem;">
-            <summary style="cursor: pointer; font-weight: 600;">Bonus: automated link builder</summary>
+            <summary style="cursor: pointer; font-weight: 600;">Bonus: automated exploit</summary>
             <p style="margin-top: 0.75rem;">This script just builds the URL - there is nothing else to automate, because
                 actual exploitation requires a human to click. You would normally run the
                 catcher on a server you control on the same network.</p>
