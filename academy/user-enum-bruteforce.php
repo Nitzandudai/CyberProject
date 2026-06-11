@@ -78,7 +78,14 @@ if ($check_stmt-&gt;fetchColumn() &gt; 0) {
     <h2>3. Task 2 - sweep and brute force</h2>
     <ol>
         <li>Sweep <code>scripts/usernames.txt</code> (shown below) against the oracle you
-            found in Task 1 and build the list of real accounts.</li>
+            found in Task 1 and build the list of real accounts.
+            <br><br>
+            <strong>Tip:</strong> to see the exact field names the registration form sends,
+            open <strong>DevTools</strong> (<kbd>F12</kbd>) &rarr; <strong>Network</strong>
+            tab, submit the form once, click the request, and open the
+            <strong>Payload</strong> tab. Those field names are what your script needs to
+            match.
+        </li>
         <li>Brute-force each one with the ten-password list shown below (the script&apos;s
             hardcoded default). The login endpoint has no rate limiting and no account
             lockout, and a successful login returns a 302 redirect to
