@@ -37,10 +37,10 @@ academy_layout_start($lesson['title']);
         CSRF token or origin validation - that is Task 1.
     </p>
     <div class="academy-callout">
-        <strong>Why a normal form POST is enough.</strong> The browser&apos;s
+        <strong>Why a normal form POST is enough?</strong> The browser&apos;s
         same-origin policy blocks <em>JavaScript</em> from reading cross-origin
         responses, but it explicitly does <strong>not</strong> block
-        <em>sending</em> form-encoded POSTs cross-origin - that has been allowed
+        <em>sending</em> form-encoded POSTs cross-origin. That has been allowed
         since HTML forms existed. CSRF is the gap between &quot;can&apos;t read
         the response&quot; and &quot;can still cause the side effect&quot;.
     </div>
@@ -63,7 +63,7 @@ academy_layout_start($lesson['title']);
         <p>
             It is <code>admin_reply.php</code>. The admin uses it from any product page
             to post an &quot;Official Store Reply&quot; under a review. The handler
-            only checks the admin session - nothing else:
+            only checks the admin session, nothing else:
         </p>
         <pre><code>// admin_reply.php
 session_start();

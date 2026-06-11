@@ -48,8 +48,8 @@ The full lab inventory is generated from a single metadata file ([`academy/lesso
 | SQL Injection: Login Bypass                            | Injection                  | Easy       | `sqli-login`            |
 | SQL Injection: UNION-based Data Exfiltration           | Injection                  | Medium     | `sqli-union`            |
 | Blind SQL Injection                                    | Injection                  | Hard       | `sqli-blind`            |
-| Reflected XSS                                          | Cross-Site Scripting       | Medium     | `xss-reflected`         |
-| Stored XSS                                             | Cross-Site Scripting       | Medium     | `xss-stored`            |
+| Reflected XSS                                          | Cross-Site Scripting       | Medium     | `Reflected_xss`         |
+| Stored XSS                                             | Cross-Site Scripting       | Medium     | `Stored_xss`            |
 | Broken Password Reset                                  | Authentication             | Medium     | `broken-password-reset` |
 | User Enumeration & Brute Force                         | Authentication             | Easy       | `user-enum-bruteforce`  |
 | CSRF: Forced Admin Replies                             | Cross-Site Request Forgery | Medium     | `csrf-admin-reply`      |

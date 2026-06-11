@@ -2,7 +2,7 @@
 require __DIR__ . '/_layout.php';
 
 $lessons = require __DIR__ . '/lessons.php';
-$lesson  = $lessons['xss-dom'];
+$lesson  = $lessons['DOM_xss'];
 
 academy_layout_start($lesson['title']);
 ?>
@@ -16,7 +16,7 @@ academy_layout_start($lesson['title']);
     </div>
 </header>
 
-<?php academy_render_related_labs('xss-dom'); ?>
+<?php academy_render_related_labs('DOM_xss'); ?>
 
 <!-- 1. THEORY -->
 <section class="academy-block">
@@ -27,7 +27,7 @@ academy_layout_start($lesson['title']);
         <strong>XSS</strong> stands for <strong>Cross-Site Scripting</strong>. It happens
         when a website accidentally lets an attacker inject their own JavaScript into a
         page that another user is viewing. The victim&apos;s browser sees that script
-        as part of the trusted website &mdash; so it runs with full access to the
+        as part of the trusted website- so it runs with full access to the
         victim&apos;s cookies, session, and anything the user can see or do on the
         site. In practical terms, a successful XSS often means the attacker can read
         the victim&apos;s session cookie and log in as them.
@@ -37,27 +37,27 @@ academy_layout_start($lesson['title']);
         <em>where the payload lives</em>:
     </p>
     <ul>
-        <li><strong>Reflected XSS</strong> &mdash; the payload sits in a link the
+        <li><strong>Reflected XSS</strong>: the payload sits in a link the
             attacker sends the victim. The server echoes it back into the page (you
             already saw this on <code>home.php?msg=&hellip;</code>).</li>
-        <li><strong>Stored XSS</strong> &mdash; the payload is saved on the server
+        <li><strong>Stored XSS</strong>: the payload is saved on the server
             (e.g. in a product review) and served to every later visitor (you already
             saw this on the electronics product reviews).</li>
-        <li><strong>DOM-based XSS</strong> &mdash; the payload never touches the
+        <li><strong>DOM-based XSS</strong>: the payload never touches the
             server at all. It lives in a part of the URL the browser keeps to itself,
             and the page&apos;s own JavaScript is what puts it into the page.</li>
     </ul>
     <p class="academy-callout">
         This lab covers <strong>DOM-based XSS</strong>. The other two variants have
-        their own labs: <a href="xss-reflected.php">Reflected XSS</a> and
-        <a href="xss-stored.php">Stored XSS</a>. Each lab is self-contained - no
+        their own labs: <a href="Reflected_xss.php">Reflected XSS</a> and
+        <a href="Stored_xss.php">Stored XSS</a>. Each lab is self-contained, no
         particular order is required.
     </p>
 
     <h3>What does &quot;DOM-based&quot; mean?</h3>
     <p>
         The <strong>DOM</strong> (Document Object Model) is just the browser&apos;s
-        live, in-memory representation of the page &mdash; every element, attribute,
+        live in-memory representation of the page- every element, attribute,
         and piece of text you can reach from JavaScript with things like
         <code>document.getElementById(&hellip;)</code> or
         <code>element.innerHTML</code>. When we say &quot;DOM-based XSS&quot;, we
@@ -70,16 +70,16 @@ academy_layout_start($lesson['title']);
     <ul>
         <li>A <strong>source</strong> is any place attacker-controlled data can enter
             the page&apos;s JavaScript. The one we use here is
-            <code>location.hash</code> &mdash; the part of the URL after <code>#</code>,
+            <code>location.hash</code>- the part of the URL after <code>#</code>,
             which the attacker fully controls in the link they send the victim. Other
             common sources include <code>location.search</code> (the
             <code>?key=value</code> part), <code>document.referrer</code> (the page
             you came from), and <code>window.name</code>. You don&apos;t need to know
-            them all &mdash; just &quot;anything the attacker can put in the URL or
-            in a previous page&quot;.</li>
+            them all - just &quot;anything the attacker can put in the URL or
+            in a previous page.</li>
         <li>A <strong>sink</strong> is any place that data ends up where it might be
             interpreted as code. The big one is <code>element.innerHTML = &hellip;</code>,
-            because the browser parses the string as HTML &mdash; including
+            because the browser parses the string as HTML - including
             <code>&lt;script&gt;</code> tags and event handlers like
             <code>onerror</code>. Other dangerous sinks: <code>document.write()</code>,
             <code>eval()</code>, <code>setTimeout("&hellip;")</code> with a string.</li>
@@ -168,7 +168,7 @@ applyHash();</code></pre>
         <li>
             <strong>Goal:</strong> harvest the victim&apos;s <code>PHPSESSID</code> via
             a link whose payload never appears in the target server&apos;s access log
-            (because the fragment is client-side only) &mdash; then replay the cookie in
+            (because the fragment is client-side only)- then replay the cookie in
             another browser to log in as them.
         </li>
     </ol>
@@ -222,13 +222,13 @@ applyHash();</code></pre>
             Put the payload after <code>#</code> in the URL. Crucially: do
             <strong>not</strong> URL-encode the fragment. Browsers leave most special
             characters in the fragment alone, and the page&apos;s JavaScript reads
-            <code>location.hash</code> verbatim &mdash; so the payload only needs to be
+            <code>location.hash</code> verbatim - so the payload only needs to be
             valid HTML, not valid URL-encoded text.
         </p>
 
         <h3>Step 4 - the catcher</h3>
         <p>
-            Identical to the reflected-XSS lab &mdash; the catcher just records the
+            Identical to the reflected-XSS lab - the catcher just records the
             <code>data</code> query parameter.
         </p>
         <details style="margin-top: 1rem;">
@@ -248,11 +248,10 @@ applyHash();</code></pre>
         <details style="margin-top: 1rem;">
             <summary style="cursor: pointer; font-weight: 600;">Bonus: automated exploit</summary>
             <p style="margin-top: 0.75rem;">
-                Like the reflected-XSS builder, this script just assembles the URL &mdash;
-                real exploitation still requires a human to click the link.
+                Like the reflected-XSS builder, this script just assembles the URL- real exploitation still requires a human to click the link.
             </p>
             <div class="academy-script">
-                <?php highlight_file(__DIR__ . '/../scripts/DOM_XSS_Attack_Link_Builder.py'); ?>
+                <?php highlight_file(__DIR__ . '/../scripts/DOM_xss.py'); ?>
             </div>
         </details>
 

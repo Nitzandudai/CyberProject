@@ -220,7 +220,7 @@ $rows = $res-&gt;fetchAll(PDO::FETCH_ASSOC);</code></pre>
                 expects a valid <code>PHPSESSID</code> in its <code>sid</code> variable.
             </p>
             <div class="academy-script">
-                <?php highlight_file(__DIR__ . '/../scripts/SQLi_UNION.py'); ?>
+                <?php highlight_file(__DIR__ . '/../scripts/SQLi_Union.py'); ?>
             </div>
         </details>
 

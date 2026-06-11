@@ -57,7 +57,7 @@ academy_layout_start($lesson['title']);
             <a href="sqli-union.php">UNION SQLi</a> lab and dump the full
             <code>users</code> table.</li>
         <li>Pick any non-admin user from the dump, log in as them, then walk through the
-            <a href="xss-stored.php">Stored XSS</a> lab to plant a cookie-stealing payload
+            <a href="Stored_xss.php">Stored XSS</a> lab to plant a cookie-stealing payload
             on a product page under that stolen identity.</li>
         <li>Run <code>python scripts/Master_kill_chain.py 2</code> to execute all three
             phases unattended and confirm a stolen cookie lands in
@@ -108,7 +108,7 @@ username=HUCKER&amp;password=hucker123&amp;login_submit=</code></pre>
             account, created first when the database was seeded, sits near the top;
             taking the last row avoids accidentally using it). Log in
             as them. POST the
-            <a href="xss-stored.php">stored-XSS</a> payload to
+            <a href="Stored_xss.php">stored-XSS</a> payload to
             <code>product_view.php?id=81</code> (electric kettle, an electronics product
             which has the review form). From now on, anyone who visits the kettle page
             ships their cookie to the catcher.
@@ -160,7 +160,7 @@ username=HUCKER&amp;password=hucker123&amp;login_submit=</code></pre>
                 <a href="sqli-union.php">SQLi UNION</a> lab) - that removes Phase 1
                 entirely.</li>
             <li>Escape on render for review content and mark cookies
-                <code>HttpOnly</code> (see <a href="xss-stored.php">Stored XSS</a>).</li>
+                <code>HttpOnly</code> (see <a href="Stored_xss.php">Stored XSS</a>).</li>
             <li>Hash passwords. Even if the UNION dump succeeds, what attackers get out
                 should not be directly usable.</li>
             <li>Add a strict Content Security Policy: no inline scripts, restricted

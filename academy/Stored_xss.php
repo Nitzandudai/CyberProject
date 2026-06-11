@@ -2,7 +2,7 @@
 require __DIR__ . '/_layout.php';
 
 $lessons = require_once __DIR__ . '/lessons.php';
-$lesson  = $lessons['xss-stored'];
+$lesson  = $lessons['Stored_xss'];
 
 academy_layout_start($lesson['title']);
 ?>
@@ -16,7 +16,7 @@ academy_layout_start($lesson['title']);
     </div>
 </header>
 
-<?php academy_render_related_labs('xss-stored'); ?>
+<?php academy_render_related_labs('Stored_xss'); ?>
 
 <!-- 1. THEORY -->
 <section class="academy-block">
@@ -49,8 +49,8 @@ academy_layout_start($lesson['title']);
     </ul>
     <p class="academy-callout">
         This lab covers <strong>stored XSS</strong>. The other two variants have
-        their own labs: <a href="xss-reflected.php">Reflected XSS</a> and
-        <a href="xss-dom.php">DOM-based XSS</a>. Each lab is self-contained - no
+        their own labs: <a href="Reflected_xss.php">Reflected XSS</a> and
+        <a href="DOM_xss.php">DOM-based XSS</a>. Each lab is self-contained - no
         particular order is required.
     </p>
 
@@ -221,7 +221,7 @@ foreach ($reviews as $rev) {
                 then POSTs the malicious review to the target product.
             </p>
             <div class="academy-script">
-                <?php highlight_file(__DIR__ . '/../scripts/stored_xss.py'); ?>
+                <?php highlight_file(__DIR__ . '/../scripts/Stored_xss.py'); ?>
             </div>
         </details>
 

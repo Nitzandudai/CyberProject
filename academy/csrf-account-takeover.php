@@ -32,13 +32,12 @@ academy_layout_start($lesson['title']);
     <p>
         The same condition applies: any endpoint that accepts a form POST, grants
         authority based only on the session cookie, and carries no CSRF protection
-        is a target. Find the password-management feature and check whether it is
-        vulnerable - that is Task 1.
+        is a target.
     </p>
     <div class="academy-callout">
         <strong>Why this is worse than the admin-reply CSRF.</strong> Posting a
         fake reply is vandalism, and the admin can edit it back. Changing the
-        password is a full account takeover - the attacker can log in as the
+        password is a full account takeover- the attacker can log in as the
         victim immediately, and the victim is <em>locked out</em> until they use
         the (also broken) password-reset flow. The blast radius covers every
         logged-in user, not just the admin.

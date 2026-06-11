@@ -44,7 +44,7 @@ return [
         'category'   => 'Injection',
         'difficulty' => 'Medium',
         'target_url' => '../products.php',
-        'scripts'    => ['../scripts/SQLi_UNION.py'],
+        'scripts'    => ['../scripts/SQLi_Union.py'],
         'status'     => 'ready',
     ],
 
@@ -58,37 +58,37 @@ return [
         'status'     => 'ready',
     ],
 
-    'xss-reflected' => [
+    'Reflected_xss' => [
         'title'      => 'Reflected XSS',
         'short'      => 'Craft a malicious link that executes JavaScript in a victim\'s browser and exfiltrates their session cookie.',
         'category'   => 'Cross-Site Scripting',
         'difficulty' => 'Medium',
         'target_url' => '../products.php',
         'scripts'    => [
-            '../scripts/Reflected_XSS_Attack_Link_Builder.py',
+            '../scripts/Reflected_xss.py',
             '../AttackerServer/catcher.php',
         ],
         'status'     => 'ready',
     ],
 
-    'xss-stored' => [
+    'Stored_xss' => [
         'title'      => 'Stored XSS',
         'short'      => 'Persist a malicious payload in the application so it fires for every visitor.',
         'category'   => 'Cross-Site Scripting',
         'difficulty' => 'Medium',
         'target_url' => '../product_view.php',
-        'scripts'    => ['../scripts/stored_xss.py'],
+        'scripts'    => ['../scripts/Stored_xss.py'],
         'status'     => 'ready',
     ],
 
-    'xss-dom' => [
+    'DOM_xss' => [
         'title'      => 'DOM-based XSS',
         'short'      => 'Smuggle JavaScript through a URL fragment that never reaches the server, exploiting an unsafe innerHTML sink in client-side code.',
         'category'   => 'Cross-Site Scripting',
         'difficulty' => 'Medium',
         'target_url' => '../product_view.php?id=1',
         'scripts'    => [
-            '../scripts/DOM_XSS_Attack_Link_Builder.py',
+            '../scripts/DOM_xss.py',
             '../AttackerServer/catcher.php',
         ],
         'status'     => 'ready',
@@ -169,11 +169,11 @@ return [
         'target_url'    => '../login.php',
         'scripts'       => [
             '../scripts/Master_kill_chain.py',
-            '../scripts/SQLi_UNION.py',
-            '../scripts/stored_xss.py',
+            '../scripts/SQLi_Union.py',
+            '../scripts/Stored_xss.py',
         ],
         'status'        => 'ready',
-        'prerequisites' => ['sqli-union', 'xss-stored'],
+        'prerequisites' => ['sqli-union', 'Stored_xss'],
     ],
 
     'chain-stealth-leak' => [
