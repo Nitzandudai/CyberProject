@@ -240,17 +240,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             where the admin&apos;s cookie lives. In a real cross-origin demo this
             file would be hosted on <code>attacker.example.com</code> while
             <code>targetUrl</code> would still point at the victim site.</p>
-        <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../scripts/win_iphone.html'); ?>
-        </div>
+        <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 600;">View win_iphone.html</summary>
+            <div class="academy-script" style="margin-top: 0.75rem;">
+                <?php highlight_file(__DIR__ . '/../scripts/win_iphone.html'); ?>
+            </div>
+        </details>
 
         <h3>The vulnerable endpoint</h3>
         <p>For completeness, here is the full source of
             <code>admin_reply.php</code> - note the absence of any anti-CSRF
             mechanism:</p>
-        <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../admin_reply.php'); ?>
-        </div>
+        <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 600;">View admin_reply.php</summary>
+            <div class="academy-script" style="margin-top: 0.75rem;">
+                <?php highlight_file(__DIR__ . '/../admin_reply.php'); ?>
+            </div>
+        </details>
 
         <h3>Why no Python script for this lab?</h3>
         <p>
