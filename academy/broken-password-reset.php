@@ -131,6 +131,22 @@ new_password=hunter2</code></pre>
             <li>Log in normally.</li>
         </ol>
 
+        <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 600;">Bonus: automated exploit</summary>
+            <p style="margin-top: 0.75rem;">
+                The script has two functions: a brute-force fallback against
+                <code>login.php</code> using a wordlist (<code>passwords.txt</code>),
+                and the actual reset bypass via <code>run_reset_password()</code>.
+            </p>
+            <div class="academy-script">
+                <?php highlight_file(__DIR__ . '/../scripts/Broken_Password_Reset.py'); ?>
+            </div>
+            <p style="margin-top: 0.75rem;">Wordlist used by the brute-force fallback:</p>
+            <div class="academy-script">
+                <?php highlight_file(__DIR__ . '/../scripts/passwords.txt'); ?>
+            </div>
+        </details>
+
         <h3>What a real password reset should look like</h3>
         <ul>
             <li>Generate a 256-bit random token, hash it, and store the hash with an
@@ -147,18 +163,6 @@ new_password=hunter2</code></pre>
                 email exists, a reset link has been sent." Revealing existence enables
                 account enumeration.</li>
         </ul>
-
-        <details style="margin-top: 1rem;">
-            <summary style="cursor: pointer; font-weight: 600;">Bonus: automated exploit</summary>
-            <p style="margin-top: 0.75rem;">
-                The script has two functions: a brute-force fallback against
-                <code>login.php</code> using a wordlist, and the actual reset bypass via
-                <code>run_reset_password()</code>.
-            </p>
-            <div class="academy-script">
-                <?php highlight_file(__DIR__ . '/../scripts/Broken_Password_Reset.py'); ?>
-            </div>
-        </details>
 
         <h3>How to fix it (for context)</h3>
         <pre><code>// At the top of reset_password.php

@@ -100,7 +100,7 @@ return [
         'category'   => 'Authentication',
         'difficulty' => 'Medium',
         'target_url' => '../login.php?view=forgot',
-        'scripts'    => ['../scripts/Broken_Password_Reset.py'],
+        'scripts'    => ['../scripts/Broken_Password_Reset.py', '../scripts/passwords.txt'],
         'status'     => 'ready',
     ],
 

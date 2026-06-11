@@ -22,48 +22,19 @@ academy_layout_start($lesson['title']);
 <section class="academy-block">
     <h2>1. Theory</h2>
     <p>
-        <strong>Cross-Site Request Forgery (CSRF)</strong> abuses one of the oldest
-        rules of the web: browsers automatically attach a site&apos;s cookies to
-        <em>every</em> request that goes to that site, no matter which page initiated
-        the request. If the application&apos;s only proof of identity is the session
-        cookie, then any page that can convince a victim&apos;s browser to fire a
-        request at the target endpoint speaks with the victim&apos;s authority - even
-        if the malicious page lives on a completely different origin.
+        <strong>Cross-Site Request Forgery (CSRF)</strong> abuses a basic browser
+        behaviour: when a request is sent to a site, the browser may include that
+        site&apos;s cookies automatically, even if the request was triggered from a
+        different origin. If the application relies only on the session cookie to
+        identify the user, then a malicious page may be able to cause the victim&apos;s
+        browser to send an authenticated request to the target application.
     </p>
     <p>
-        The admin-reply endpoint checks for an admin session and then blindly
-        UPDATEs the database from the POST body:
-    </p>
-    <pre><code>// admin_reply.php
-session_start();
-
-if (!isset($_SESSION["is_admin"]) || $_SESSION["is_admin"] != 1) {
-    die("Unauthorized access.");
-}
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $db = new PDO('sqlite:' . __DIR__ . '/app.db');
-    $review_id     = (int)$_POST['review_id'];
-    $reply_content = $_POST['reply_content'];
-
-    $stmt = $db-&gt;prepare("UPDATE reviews SET admin_reply = ? WHERE id = ?");
-    $stmt-&gt;execute([$reply_content, $review_id]);
-
-    header("Location: " . $_SERVER['HTTP_REFERER']);
-}</code></pre>
-    <p>What the server is <em>not</em> checking:</p>
-    <ul>
-        <li>No CSRF token in the POST body.</li>
-        <li>No <code>Origin</code> or <code>Referer</code> header validation.</li>
-        <li>No <code>SameSite</code> attribute on the session cookie, so the cookie
-            travels on cross-origin POSTs by default.</li>
-        <li>No re-authentication or step-up for an action that modifies public-facing
-            store content.</li>
-    </ul>
-    <p>
-        That leaves the &quot;is the user an admin?&quot; question as the
-        <em>only</em> gate, and the admin&apos;s own browser is happy to answer that
-        with the session cookie for anyone who asks.
+        The same condition applies here: any endpoint that accepts a state-changing
+        request, authorises the action only by the session cookie, and does not include
+        CSRF protection may be vulnerable. Browse the admin panel, find a feature that
+        modifies public-facing content, and check whether it can be triggered without a
+        CSRF token or origin validation - that is Task 1.
     </p>
     <div class="academy-callout">
         <strong>Why a normal form POST is enough.</strong> The browser&apos;s
