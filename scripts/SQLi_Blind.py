@@ -1,8 +1,9 @@
+#עופר ונוע צריך לחשוב הוא מוצא רק את הטבלה הראשונה ואת השורה הראשונה בטבלה הזאת
 import requests
 import time
 
 URL = "http://localhost/CyberProject/cart.php"
-COOKIES = {'PHPSESSID': 'p36d9sfpspku81ps8am2fdckbb'}
+COOKIES = {'PHPSESSID': 'u7bghf1trl27i70ugtmh02m5m8'}
 ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_!@#"
 
 def get_baseline():

