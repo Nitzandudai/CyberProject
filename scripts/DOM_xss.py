@@ -1,5 +1,3 @@
-# DOM-based XSS Attack Link Builder
-
 import socket
 import urllib.parse
 
