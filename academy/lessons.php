@@ -199,7 +199,7 @@ return [
             '../scripts/SQLi.py',
             '../scripts/SQLi_Blind.py',
         ],
-        'status'        => 'coming_soon',
+        'status'        => 'ready',
         'prerequisites' => ['sqli-login', 'sqli-blind'],
     ],
 
