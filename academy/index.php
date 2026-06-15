@@ -5,8 +5,9 @@ $lessons = require_once __DIR__ . '/lessons.php';
 
 $reset_flash = isset($_GET['reset']) && $_GET['reset'] === 'ok';
 
-$labs     = array_filter($lessons, fn($l) => $l['category'] !== 'Capstone');
-$capstones = array_filter($lessons, fn($l) => $l['category'] === 'Capstone');
+$foundations = array_filter($lessons, fn($l) => $l['category'] === 'Foundations');
+$labs        = array_filter($lessons, fn($l) => $l['category'] !== 'Capstone' && $l['category'] !== 'Foundations');
+$capstones   = array_filter($lessons, fn($l) => $l['category'] === 'Capstone');
 
 function academy_difficulty_badge(string $difficulty): string {
     $cls = match (strtolower($difficulty)) {
@@ -14,6 +15,7 @@ function academy_difficulty_badge(string $difficulty): string {
         'medium'   => 'is-medium',
         'hard'     => 'is-hard',
         'capstone' => 'is-capstone',
+        'primer'   => 'is-primer',
         default    => 'is-soon',
     };
     return '<span class="academy-badge ' . $cls . '">' . htmlspecialchars($difficulty) . '</span>';
@@ -69,6 +71,15 @@ academy_layout_start('All labs');
         and then reveals our reference solution and automation script.
     </p>
 </section>
+
+<?php if ($foundations): ?>
+<h2 class="academy-section-title">Start here</h2>
+<div class="academy-grid">
+    <?php foreach ($foundations as $slug => $lesson): ?>
+        <?= academy_render_card($slug, $lesson) ?>
+    <?php endforeach; ?>
+</div>
+<?php endif; ?>
 
 <h2 class="academy-section-title">Individual labs</h2>
 <div class="academy-grid">

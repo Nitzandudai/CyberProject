@@ -26,6 +26,18 @@
 
 return [
 
+    /* ===== Foundations / prerequisite knowledge ===== */
+
+    'basic-knowledge' => [
+        'title'      => 'Basic Knowledge: Web, PHP, SQL & the Browser',
+        'short'      => 'Prerequisite primer on how websites work end-to-end: client/server/DB, HTTP, HTML forms, PHP, SQL, JavaScript, sessions/cookies, and browser dev tools. Read this before the labs.',
+        'category'   => 'Foundations',
+        'difficulty' => 'Primer',
+        'target_url' => '../home.php',
+        'scripts'    => [],
+        'status'     => 'ready',
+    ],
+
     /* ===== Individual labs ===== */
 
     'sqli-login' => [

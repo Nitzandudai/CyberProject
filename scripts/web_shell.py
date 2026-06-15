@@ -1,17 +1,5 @@
-"""
-This phase uploads a malicious payload disguised as a JPG file.
-After modifying the server behavior through `.htaccess`,
-the uploaded file gets executed as PHP, resulting in remote code execution.
-
-This demonstrates a realistic file-upload exploitation chain
-commonly seen in insecure web applications.
-"""
-
 import requests
 
-# Default target is localhost so the lab works out of the box on a single
-# XAMPP machine. For a multi-machine demo, change TARGET_IP (or pass
-# target_ip=...) to the IP of the victim host.
 TARGET_IP = "localhost"
 UPLOAD_FOLDER = "uploaded_ID"
 

@@ -50,6 +50,7 @@ def dump_users(target_url="http://localhost/CyberProject/products.php", session_
         else:
             print(f"[*] Column {i} exists...")
 
+    # probably will never get there but just in case
     if detected_cols == 0:
         print("[-] Failed to detect column count. Defaulting to 5.")
         detected_cols = 5
