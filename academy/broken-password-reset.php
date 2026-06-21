@@ -2,13 +2,14 @@
 require __DIR__ . '/_layout.php';
 
 $lessons = require_once __DIR__ . '/lessons.php';
-$lesson  = $lessons['broken-password-reset'];
+$slug    = 'broken-password-reset';
+$lesson  = $lessons[$slug];
 
-academy_layout_start($lesson['title']);
+academy_layout_start($lesson['title'], $slug);
 ?>
 
 <header class="academy-lesson-head">
-    <div class="academy-lesson-eyebrow"><?= htmlspecialchars($lesson['category']) ?> &middot; Lab 06</div>
+    <div class="academy-lesson-eyebrow"><?= htmlspecialchars($lesson['category']) ?> &middot; Lab 07</div>
     <h1><?= htmlspecialchars($lesson['title']) ?></h1>
     <div class="academy-lesson-meta">
         <span class="academy-badge is-medium"><?= htmlspecialchars($lesson['difficulty']) ?></span>
@@ -87,8 +88,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" &amp;&amp; $user_to_reset) {
             password you chose.
         </li>
     </ol>
-    <p>Run the &quot;Reset databases&quot; button on the academy index when you&apos;re
-       done if you want to start from a clean state again.</p>
 </section>
 
 <!-- 4. START THE LAB -->

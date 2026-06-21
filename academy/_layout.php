@@ -6,7 +6,7 @@
  *
  *   $page_title = 'My Lesson';
  *   require __DIR__ . '/_layout.php';
- *   academy_layout_start($page_title);
+ *   academy_layout_start($page_title, $slug);  // optional slug enables per-lab DB reset
  *   // ... page body HTML ...
  *   academy_layout_end();
  *
@@ -15,7 +15,8 @@
  */
 
 if (!function_exists('academy_layout_start')) {
-    function academy_layout_start(string $title = 'Cyber Academy'): void {
+    function academy_layout_start(string $title = 'Cyber Academy', ?string $slug = null): void {
+        $GLOBALS['academy_page_slug'] = $slug;
         ini_set('highlight.default', '#e2e8f0'); // light text (also used for non-PHP files)
         ini_set('highlight.html',    '#e2e8f0'); // content outside <?php tags
         ini_set('highlight.string',  '#a5d6ff'); // string literals
@@ -111,7 +112,39 @@ if (!function_exists('academy_layout_start')) {
         <?php
     }
 
+    /**
+     * Reset banner + form for labs that mutate app.db / internal.db.
+     * Enabled per lesson via needs_db_reset in lessons.php.
+     */
+    function academy_render_db_reset(string $current_slug): void {
+        $lessons = require __DIR__ . '/lessons.php';
+        if (!isset($lessons[$current_slug]) || empty($lessons[$current_slug]['needs_db_reset'])) {
+            return;
+        }
+        $reset_flash = isset($_GET['reset']) && $_GET['reset'] === 'ok';
+        if ($reset_flash): ?>
+            <div class="academy-flash">Lab environment reset. Databases restored from seed.</div>
+        <?php endif; ?>
+        <form class="academy-reset-form" method="post" action="reset.php"
+              onsubmit="return confirm('Reset databases to their seed copy? Any data created during labs will be lost.');">
+            <input type="hidden" name="return" value="<?= htmlspecialchars($current_slug) ?>">
+            <div>
+                <strong>Lab environment dirty?</strong>
+                <div style="color:#475569; font-size:0.9rem;">
+                    Restore <code>app.db</code> and <code>internal.db</code> from the pristine seed copy
+                    taken when the academy was installed.
+                </div>
+            </div>
+            <button type="submit">Reset databases</button>
+        </form>
+        <?php
+    }
+
     function academy_layout_end(): void {
+        if (!empty($GLOBALS['academy_page_slug'])) {
+            academy_render_db_reset($GLOBALS['academy_page_slug']);
+        }
+        unset($GLOBALS['academy_page_slug']);
         ?>
     </main>
     <footer class="academy-footer">

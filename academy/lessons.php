@@ -19,6 +19,9 @@
  *                 chain combines. Used to render the "Prerequisites" chips
  *                 on the capstone page and (reverse-mapped) the "Used in"
  *                 chips on each individual lab page.
+ *   needs_db_reset (optional) - when true, show the restore-databases
+ *                 control on this lesson page (e.g. registration enumeration
+ *                 that inserts probe users into app.db).
  *
  * Adding a new lesson later: add an entry here, then copy
  * academy/sqli-login.php to academy/<slug>.php and adjust the content.
@@ -56,7 +59,7 @@ return [
         'category'   => 'Injection',
         'difficulty' => 'Medium',
         'target_url' => '../products.php',
-        'scripts'    => ['../scripts/SQLi_Union.py'],
+        'scripts'    => ['../scripts/SQLi_UNION.py'],
         'status'     => 'ready',
     ],
 
@@ -127,6 +130,7 @@ return [
             '../scripts/usernames.txt',
         ],
         'status'     => 'ready',
+        'needs_db_reset' => true,
     ],
 
     'csrf-admin-reply' => [
@@ -155,11 +159,21 @@ return [
         'status'     => 'ready',
     ],
 
+    'web-shell' => [
+        'title'      => 'Web Shell via File Upload',
+        'short'      => 'Bypass an extension denylist and upload a web shell to execute commands.',
+        'category'   => 'File Upload',
+        'difficulty' => 'Hard',
+        'target_url' => '../home.php',
+        'scripts'    => ['../scripts/web_shell.py'],
+        'status'     => 'ready',
+    ],
+
     /* ===== Capstone chains (split from Master_kill_chain.py) ===== */
 
-    'chain-web-shell' => [
-        'title'         => 'Capstone: Full Web Shell (Enum -> Brute / Reset -> Web Shell)',
-        'short'         => 'Discover users, gain access via brute force or broken reset, then drop a web shell for remote code execution.',
+    'chain-breach-blind-sql-stored-xss' => [
+        'title'         => 'Capstone: Breach via Blind SQLi & Stored XSS (Enum -> Brute / Reset -> Blind SQLi -> Stored XSS)',
+        'short'         => 'Discover users, gain access via brute force or broken reset, leak a secret with blind SQLi, then plant stored XSS.',
         'category'      => 'Capstone',
         'difficulty'    => 'Capstone',
         'target_url'    => '../login.php',
@@ -167,25 +181,26 @@ return [
             '../scripts/Master_kill_chain.py',
             '../scripts/enum_and_brute.py',
             '../scripts/Broken_Password_Reset.py',
-            '../scripts/web_shell.py',
+            '../scripts/SQLi_Blind.py',
+            '../scripts/stored_xss.py',
         ],
         'status'        => 'ready',
-        'prerequisites' => ['user-enum-bruteforce', 'broken-password-reset'],
+        'prerequisites' => ['user-enum-bruteforce', 'broken-password-reset', 'sqli-blind', 'Stored_xss'],
     ],
 
-    'chain-data-breach' => [
-        'title'         => 'Capstone: Data Breach to XSS (UNION SQLi -> Stored XSS)',
-        'short'         => 'Dump the user table with UNION SQLi, then weaponise a stolen account to plant stored XSS.',
+    'chain-web-shell' => [
+        'title'         => 'Capstone: Full Web Shell (UNION SQLi -> Web Shell)',
+        'short'         => 'Dump the user table with UNION SQLi, then use a stolen account to upload and execute a web shell.',
         'category'      => 'Capstone',
         'difficulty'    => 'Capstone',
         'target_url'    => '../login.php',
         'scripts'       => [
             '../scripts/Master_kill_chain.py',
-            '../scripts/SQLi_Union.py',
-            '../scripts/Stored_xss.py',
+            '../scripts/SQLi_UNION.py',
+            '../scripts/web_shell.py',
         ],
         'status'        => 'ready',
-        'prerequisites' => ['sqli-union', 'Stored_xss'],
+        'prerequisites' => ['sqli-union', 'web-shell'],
     ],
 
     'chain-stealth-leak' => [

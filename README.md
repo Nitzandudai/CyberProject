@@ -38,7 +38,7 @@ A small supermarket app (browse products, search, add to cart, register, log in,
 
 ### The academy
 
-A separate, learning interface at `/academy/` with **eight individual labs** and **three capstone chains**. Every lesson follows the same template: theory, your task, a "Start the lab" link into the vulnerable site, and a reveal-on-click solution complete with the attack source code rendered inline.
+A separate, learning interface at `/academy/` with **eleven individual labs** and **three capstone chains**. Every lesson follows the same template: theory, your task, a "Start the lab" link into the vulnerable site, and a reveal-on-click solution complete with the attack source code rendered inline.
 
 The full lab inventory is generated from a single metadata file ([`academy/lessons.php`](academy/lessons.php)) and currently looks like this:
 
@@ -53,8 +53,9 @@ The full lab inventory is generated from a single metadata file ([`academy/lesso
 | Broken Password Reset                                  | Authentication             | Medium     | `broken-password-reset` |
 | User Enumeration & Brute Force                         | Authentication             | Easy       | `user-enum-bruteforce`  |
 | CSRF: Forced Admin Replies                             | Cross-Site Request Forgery | Medium     | `csrf-admin-reply`      |
-| Capstone: Full Web Shell (Enum → Brute / Reset → RCE)  | Capstone                   | Capstone   | `chain-web-shell`       |
-| Capstone: Data Breach to XSS (UNION SQLi → Stored XSS) | Capstone                   | Capstone   | `chain-data-breach`     |
+| Web Shell via File Upload                              | File Upload                | Hard       | `web-shell`             |
+| Capstone: Breach via Blind SQLi & Stored XSS (Enum → Brute / Reset → Blind SQLi → Stored XSS) | Capstone | Capstone | `chain-breach-blind-sql-stored-xss` |
+| Capstone: Full Web Shell (UNION SQLi → Web Shell) | Capstone | Capstone | `chain-web-shell` |
 | Capstone: Stealth Leak (Login Bypass → Blind SQLi)     | Capstone                   | Capstone   | `chain-stealth-leak`    |
 
 
@@ -91,7 +92,7 @@ Each capstone consumes two or more individual labs as prerequisites. The cross-l
 - The vulnerable site should be reachable at `http://localhost/CyberProject/login.php`.
 - Log in with `carlos` / `1234` to confirm the seeded database is intact.
 
-If anything fails, hit the **Reset databases** button on the academy index - it restores `app.db` and `internal.db` from the pristine copies in `academy/seed/`.
+If anything fails after user-enumeration sweeps, use **Reset databases** at the bottom of the [User Enumeration & Brute Force](academy/user-enum-bruteforce.php) lab — it restores `app.db` and `internal.db` from the pristine copies in `academy/seed/`.
 
 ---
 

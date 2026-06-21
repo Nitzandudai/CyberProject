@@ -2,13 +2,14 @@
 require __DIR__ . '/_layout.php';
 
 $lessons = require __DIR__ . '/lessons.php';
-$lesson  = $lessons['csrf-account-takeover'];
+$slug    = 'csrf-account-takeover';
+$lesson  = $lessons[$slug];
 
-academy_layout_start($lesson['title']);
+academy_layout_start($lesson['title'], $slug);
 ?>
 
 <header class="academy-lesson-head">
-    <div class="academy-lesson-eyebrow"><?= htmlspecialchars($lesson['category']) ?> &middot; Lab 09</div>
+    <div class="academy-lesson-eyebrow"><?= htmlspecialchars($lesson['category']) ?> &middot; Lab 10</div>
     <h1><?= htmlspecialchars($lesson['title']) ?></h1>
     <div class="academy-lesson-meta">
         <span class="academy-badge is-medium"><?= htmlspecialchars($lesson['difficulty']) ?></span>
@@ -115,10 +116,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" &amp;&amp; isset($_POST['new_password'
             you embedded in the attack page. You are now them.
         </li>
     </ol>
-    <p>
-        Use the &quot;Reset databases&quot; button on the academy index when
-        you&apos;re done to restore the seeded passwords.
-    </p>
 </section>
 
 <!-- 4. START THE LAB -->

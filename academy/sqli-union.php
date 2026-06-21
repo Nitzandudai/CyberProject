@@ -2,9 +2,10 @@
 require __DIR__ . '/_layout.php';
 
 $lessons = require_once __DIR__ . '/lessons.php';
-$lesson  = $lessons['sqli-union'];
+$slug    = 'sqli-union';
+$lesson  = $lessons[$slug];
 
-academy_layout_start($lesson['title']);
+academy_layout_start($lesson['title'], $slug);
 ?>
 
 <header class="academy-lesson-head">
@@ -220,7 +221,7 @@ $rows = $res-&gt;fetchAll(PDO::FETCH_ASSOC);</code></pre>
                 expects a valid <code>PHPSESSID</code> in its <code>sid</code> variable.
             </p>
             <div class="academy-script">
-                <?php highlight_file(__DIR__ . '/../scripts/SQLi_Union.py'); ?>
+                <?php highlight_file(__DIR__ . '/../scripts/SQLi_UNION.py'); ?>
             </div>
         </details>
 

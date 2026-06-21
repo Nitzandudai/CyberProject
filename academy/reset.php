@@ -45,5 +45,12 @@ if ($errors) {
     exit;
 }
 
-header('Location: index.php?reset=ok');
+$return = $_POST['return'] ?? '';
+$lessons = require __DIR__ . '/lessons.php';
+$redirect = 'index.php';
+if ($return !== '' && isset($lessons[$return])) {
+    $redirect = $return . '.php?reset=ok';
+}
+
+header('Location: ' . $redirect);
 exit;

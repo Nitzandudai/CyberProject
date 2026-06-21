@@ -2,9 +2,10 @@
 require __DIR__ . '/_layout.php';
 
 $lessons = require_once __DIR__ . '/lessons.php';
-$lesson  = $lessons['sqli-login'];
+$slug    = 'sqli-login';
+$lesson  = $lessons[$slug];
 
-academy_layout_start($lesson['title']);
+academy_layout_start($lesson['title'], $slug);
 ?>
 
 <header class="academy-lesson-head">

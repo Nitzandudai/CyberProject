@@ -2,9 +2,10 @@
 require __DIR__ . '/_layout.php';
 
 $lessons = require_once __DIR__ . '/lessons.php';
-$lesson  = $lessons['Reflected_xss'];
+$slug    = 'Reflected_xss';
+$lesson  = $lessons[$slug];
 
-academy_layout_start($lesson['title']);
+academy_layout_start($lesson['title'], $slug);
 ?>
 
 <header class="academy-lesson-head">
@@ -185,12 +186,6 @@ document.location =
             &quot;Coupon Applied!&quot; page so the victim doesn&apos;t immediately
             realise anything went wrong.
         </p>
-        <details style="margin-top: 1rem;">
-            <summary style="cursor: pointer; font-weight: 600;">View catcher.php</summary>
-            <div class="academy-script" style="margin-top: 0.75rem;">
-                <?php highlight_file(__DIR__ . '/../AttackerServer/catcher.php'); ?>
-            </div>
-        </details>
 
         <h3>Step 5 - replay the cookie</h3>
         <p>
@@ -201,7 +196,13 @@ document.location =
 
         <details style="margin-top: 1rem;">
             <summary style="cursor: pointer; font-weight: 600;">Bonus: automated exploit</summary>
-            <p style="margin-top: 0.75rem;">This script just builds the URL - there is nothing else to automate, because
+            <p style="margin-top: 0.75rem;"><strong>Catcher</strong> -
+                <code>AttackerServer/catcher.php</code>:</p>
+            <div class="academy-script">
+                <?php highlight_file(__DIR__ . '/../AttackerServer/catcher.php'); ?>
+            </div>
+            <p style="margin-top: 0.75rem;"><strong>Link builder</strong> -
+                <code>scripts/Reflected_xss.py</code>. This script just builds the URL -
                 actual exploitation requires a human to click. You would normally run the
                 catcher on a server you control on the same network.</p>
             <div class="academy-script">

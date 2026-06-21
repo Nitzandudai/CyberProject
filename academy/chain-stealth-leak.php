@@ -2,9 +2,10 @@
 require __DIR__ . '/_layout.php';
 
 $lessons = require_once __DIR__ . '/lessons.php';
-$lesson  = $lessons['chain-stealth-leak'];
+$slug    = 'chain-stealth-leak';
+$lesson  = $lessons[$slug];
 
-academy_layout_start($lesson['title']);
+academy_layout_start($lesson['title'], $slug);
 ?>
 
 <header class="academy-lesson-head">
@@ -52,14 +53,12 @@ academy_layout_start($lesson['title']);
             <a href="sqli-login.php">login-bypass SQLi</a> and capturing the
             <code>PHPSESSID</code>.</li>
         <li>With that session, perform the <a href="sqli-blind.php">blind SQLi</a>
-            against <code>cart.php</code>&apos;s coupon input and extract
-            <code>encrypted_code</code> from the <code>CUPONS</code> table.</li>
+            against <code>cart.php</code>&apos;s coupon input to leak the hidden VIP coupon
+            from <code>internal.db</code>. Discovering which table and column hold it is part
+            of the challenge.</li>
         <li>
-            <strong>Goal:</strong> recover the value of the seeded VIP coupon - a freshly
-            seeded DB returns <code>ANAN-VIP-2026</code>.
+            <strong>Goal:</strong> recover the value of the seeded VIP coupon code.
         </li>
-        <li>Run <code>python scripts/Master_kill_chain.py 3</code> end to end and watch
-            the chain extract the coupon unattended.</li>
     </ol>
 </section>
 
@@ -119,31 +118,37 @@ username=' OR 1=1 -- &amp;password=anything&amp;login_submit=</code></pre>
         </ul>
 
         <h3>Orchestration script</h3>
-        <p>Run with: <code>python scripts/Master_kill_chain.py 3</code>. The chain glues
+        <p>Run <code>python scripts/Master_kill_chain.py 3</code>. The chain glues
             the two scripts together - note how it injects the stolen session straight
             into <code>SQLi_Blind.COOKIES['PHPSESSID']</code> before running the leak.</p>
-        <div class="academy-script">
-            <?php
-            $src = file_get_contents(__DIR__ . '/../scripts/Master_kill_chain.py');
-            if ($src === false) {
-                echo '<p class="academy-solution-warning">Script file could not be loaded.</p>';
-            } else {
-                $p1 = strpos($src, "\ndef chain_1_web_shell");
-                $p3 = strpos($src, "\ndef chain_3_stealth");
-                $pm = strpos($src, "\ndef main");
-                if ($p1 === false || $p3 === false || $pm === false) {
-                    echo '<p class="academy-solution-warning">Script markers not found - has Master_kill_chain.py been renamed?</p>';
+        <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 600;">Bonus: automated exploit</summary>
+            <p style="margin-top: 0.75rem;">
+                Excerpt of <code>chain_3_stealth()</code> from the master script.
+            </p>
+            <div class="academy-script">
+                <?php
+                $src = file_get_contents(__DIR__ . '/../scripts/Master_kill_chain.py');
+                if ($src === false) {
+                    echo '<p class="academy-solution-warning">Script file could not be loaded.</p>';
                 } else {
-                    $excerpt = substr($src, 0, $p1 + 1)
-                             . "# --- chain_1_web_shell() defined in chain-web-shell lab ---"
-                             . "\n# --- chain_2_breach() defined in chain-data-breach lab ---\n\n"
-                             . substr($src, $p3 + 1, $pm - $p3 - 1)
-                             . "\n" . substr($src, $pm + 1);
-                    highlight_string($excerpt);
+                    $p1 = strpos($src, "\ndef chain_1_breach_blind_sql_and_stored_xss");
+                    $p3 = strpos($src, "\ndef chain_3_stealth");
+                    $pm = strpos($src, "\ndef main");
+                    if ($p1 === false || $p3 === false || $pm === false) {
+                        echo '<p class="academy-solution-warning">Script markers not found - has Master_kill_chain.py been renamed?</p>';
+                    } else {
+                        $excerpt = substr($src, 0, $p1 + 1)
+                                 . "# --- chain_1_breach_blind_sql_and_stored_xss() defined in chain-breach-blind-sql-stored-xss lab ---"
+                                 . "\n# --- chain_2_web_shell() defined in chain-web-shell lab ---\n\n"
+                                 . substr($src, $p3 + 1, $pm - $p3 - 1)
+                                 . "\n" . substr($src, $pm + 1);
+                        highlight_string($excerpt);
+                    }
                 }
-            }
-            ?>
-        </div>
+                ?>
+            </div>
+        </details>
 
         <h3>How to fix it (for context)</h3>
         <ul>

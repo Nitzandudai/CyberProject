@@ -2,13 +2,14 @@
 require __DIR__ . '/_layout.php';
 
 $lessons = require_once __DIR__ . '/lessons.php';
-$lesson  = $lessons['csrf-admin-reply'];
+$slug    = 'csrf-admin-reply';
+$lesson  = $lessons[$slug];
 
-academy_layout_start($lesson['title']);
+academy_layout_start($lesson['title'], $slug);
 ?>
 
 <header class="academy-lesson-head">
-    <div class="academy-lesson-eyebrow"><?= htmlspecialchars($lesson['category']) ?> &middot; Lab 08</div>
+    <div class="academy-lesson-eyebrow"><?= htmlspecialchars($lesson['category']) ?> &middot; Lab 09</div>
     <h1><?= htmlspecialchars($lesson['title']) ?></h1>
     <div class="academy-lesson-meta">
         <span class="academy-badge is-medium"><?= htmlspecialchars($lesson['difficulty']) ?></span>
@@ -120,11 +121,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             &quot;Post Official Reply&quot;.
         </li>
     </ol>
-    <p>
-        Use the &quot;Reset databases&quot; button on the academy index when
-        you&apos;re done; this lab dirties every <code>admin_reply</code> in the
-        <code>reviews</code> table.
-    </p>
 
 </section>
 
@@ -205,26 +201,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 with one of the insults from the payload.</li>
         </ol>
 
-        <h3>The attack page itself</h3>
-        <p>Open <code>scripts/win_iphone.html</code> to read it inline. Note that the
-            <code>targetUrl</code> at the top is the <em>victim</em> URL - that&apos;s
+        <h3>The attack page and vulnerable endpoint</h3>
+        <p>Open <code>scripts/win_iphone.html</code> to read the attack page. Note that
+            the <code>targetUrl</code> at the top is the <em>victim</em> URL - that&apos;s
             where the admin&apos;s cookie lives. In a real cross-origin demo this
             file would be hosted on <code>attacker.example.com</code> while
             <code>targetUrl</code> would still point at the victim site.</p>
         <details style="margin-top: 1rem;">
-            <summary style="cursor: pointer; font-weight: 600;">View win_iphone.html</summary>
-            <div class="academy-script" style="margin-top: 0.75rem;">
+            <summary style="cursor: pointer; font-weight: 600;">Bonus: automated exploit</summary>
+            <p style="margin-top: 0.75rem;"><strong>Attack page</strong> -
+                <code>scripts/win_iphone.html</code>:</p>
+            <div class="academy-script">
                 <?php highlight_file(__DIR__ . '/../scripts/win_iphone.html'); ?>
             </div>
-        </details>
-
-        <h3>The vulnerable endpoint</h3>
-        <p>For completeness, here is the full source of
-            <code>admin_reply.php</code> - note the absence of any anti-CSRF
-            mechanism:</p>
-        <details style="margin-top: 1rem;">
-            <summary style="cursor: pointer; font-weight: 600;">View admin_reply.php</summary>
-            <div class="academy-script" style="margin-top: 0.75rem;">
+            <p style="margin-top: 0.75rem;"><strong>Vulnerable endpoint</strong> -
+                <code>admin_reply.php</code> (note the absence of any anti-CSRF
+                mechanism):</p>
+            <div class="academy-script">
                 <?php highlight_file(__DIR__ . '/../admin_reply.php'); ?>
             </div>
         </details>

@@ -2,13 +2,14 @@
 require __DIR__ . '/_layout.php';
 
 $lessons = require_once __DIR__ . '/lessons.php';
-$lesson  = $lessons['user-enum-bruteforce'];
+$slug    = 'user-enum-bruteforce';
+$lesson  = $lessons[$slug];
 
-academy_layout_start($lesson['title']);
+academy_layout_start($lesson['title'], $slug);
 ?>
 
 <header class="academy-lesson-head">
-    <div class="academy-lesson-eyebrow"><?= htmlspecialchars($lesson['category']) ?> &middot; Lab 07</div>
+    <div class="academy-lesson-eyebrow"><?= htmlspecialchars($lesson['category']) ?> &middot; Lab 08</div>
     <h1><?= htmlspecialchars($lesson['title']) ?></h1>
     <div class="academy-lesson-meta">
         <span class="academy-badge is-easy"><?= htmlspecialchars($lesson['difficulty']) ?></span>
@@ -93,6 +94,11 @@ if ($check_stmt-&gt;fetchColumn() &gt; 0) {
         <li><strong>Goal:</strong> recover at least one <code>(username, password)</code>
             pair that lets you log in successfully.</li>
     </ol>
+    <p>
+        Sweeping registration with names that do not exist yet inserts probe users into
+        <code>app.db</code>. When you are done, use <strong>Reset databases</strong> at the
+        bottom of this page to restore the seed copy.
+    </p>
 
     <p style="margin-top: 18px;"><strong>Your toolbox.</strong></p>
     <details class="academy-hint">

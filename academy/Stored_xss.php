@@ -2,9 +2,10 @@
 require __DIR__ . '/_layout.php';
 
 $lessons = require_once __DIR__ . '/lessons.php';
-$lesson  = $lessons['Stored_xss'];
+$slug    = 'Stored_xss';
+$lesson  = $lessons[$slug];
 
-academy_layout_start($lesson['title']);
+academy_layout_start($lesson['title'], $slug);
 ?>
 
 <header class="academy-lesson-head">
@@ -133,10 +134,6 @@ foreach ($reviews as $rev) {
             <code>AttackerServer/stolen_cookies.txt</code>.
         </li>
     </ol>
-    <p>
-        If the lab gets dirty after a few attempts, run the &quot;Reset databases&quot;
-        button on the academy index to start with a clean reviews table.
-    </p>
 </section>
 
 <!-- 4. START THE LAB -->

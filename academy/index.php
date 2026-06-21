@@ -3,8 +3,6 @@ require __DIR__ . '/_layout.php';
 
 $lessons = require_once __DIR__ . '/lessons.php';
 
-$reset_flash = isset($_GET['reset']) && $_GET['reset'] === 'ok';
-
 $foundations = array_filter($lessons, fn($l) => $l['category'] === 'Foundations');
 $labs        = array_filter($lessons, fn($l) => $l['category'] !== 'Capstone' && $l['category'] !== 'Foundations');
 $capstones   = array_filter($lessons, fn($l) => $l['category'] === 'Capstone');
@@ -59,10 +57,6 @@ function academy_render_card(string $slug, array $lesson): string {
 academy_layout_start('All labs');
 ?>
 
-<?php if ($reset_flash): ?>
-    <div class="academy-flash">Lab environment reset. Databases restored from seed.</div>
-<?php endif; ?>
-
 <section class="academy-hero">
     <h1>Cyber Academy</h1>
     <p>
@@ -94,18 +88,6 @@ academy_layout_start('All labs');
         <?= academy_render_card($slug, $lesson) ?>
     <?php endforeach; ?>
 </div>
-
-<form class="academy-reset-form" method="post" action="reset.php"
-      onsubmit="return confirm('Reset databases to their seed copy? Any data created during labs will be lost.');">
-    <div>
-        <strong>Lab environment dirty?</strong>
-        <div style="color:#475569; font-size:0.9rem;">
-            Restore <code>app.db</code> and <code>internal.db</code> from the pristine seed copy
-            taken when the academy was installed.
-        </div>
-    </div>
-    <button type="submit">Reset databases</button>
-</form>
 
 <?php
 academy_layout_end();
