@@ -36,8 +36,6 @@ def try_brute_force(user="carlos", passwords="passwords.txt", base_url=DEFAULT_B
                     print(f"[!] Connection error testing password: {password}")
                     continue
 
-                return None
-                    
     except FileNotFoundError:
         print(f"[!] Error: The file {passwords} was not found.")
 

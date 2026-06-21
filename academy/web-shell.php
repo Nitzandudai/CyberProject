@@ -38,9 +38,9 @@ academy_layout_start($lesson['title'], $slug);
     <p>
         A file upload turns into <strong>remote code execution</strong> when two conditions
         are both true: the attacker can place a file the web server will <em>execute</em>,
-        and that file lands somewhere the server will actually <em>serve and run</em>. An
-        &quot;upload a profile picture&quot; feature is harmless on its own - it only becomes
-        a web shell when the validation is weak and the upload directory is inside the web root.
+        and that file lands somewhere the server will actually <em>serve and run</em>. A
+        file-upload feature is harmless on its own - it only becomes a web shell when the
+        validation is weak and the upload directory is inside the web root.
     </p>
     <p>The classic validation mistakes, in order of how often they show up:</p>
     <ul>
@@ -59,12 +59,10 @@ academy_layout_start($lesson['title'], $slug);
             <code>uploads/evil.php</code> is reachable by URL, the PHP engine runs it.</li>
     </ul>
     <p>
-        The most elegant bypass when only extensions are filtered is to change the rules of
-        the game rather than fight the filter: Apache reads a per-directory
-        <code>.htaccess</code> file, and an <code>AddType</code> directive there can tell the
-        server to execute a normally-inert extension (like <code>.jpg</code>) as PHP. Upload
-        the <code>.htaccess</code>, then upload an image that is secretly PHP - both pass an
-        extension denylist, and together they give you a shell.
+        A subtler mistake is letting <em>server configuration files</em> be uploaded too. In
+        some environments those files can change how the server interprets other uploads,
+        turning an apparently harmless file into executable code. Working out exactly how that
+        plays out against this denylist is part of the task below.
     </p>
 </section>
 
@@ -118,8 +116,9 @@ move_uploaded_file($_FILES["id_photo"]["tmp_name"], $targetPath);</code></pre>
             automated script uses product id <code>77</code>).</li>
         <li>Get a file that the server will execute as PHP into <code>uploaded_ID/</code>
             <em>without</em> using a blocked extension.</li>
-        <li><strong>Goal:</strong> request your uploaded file with
-            <code>?cmd=whoami</code> and see the output of a real OS command come back.</li>
+        <li><strong>Goal:</strong> prove the uploaded payload is <em>executed</em> by the
+            server rather than served as a plain file - for example, request it with
+            <code>?cmd=whoami</code> and watch a real OS command run.</li>
     </ol>
     <details class="academy-hint">
         <summary>Reveal the bypass strategy</summary>
