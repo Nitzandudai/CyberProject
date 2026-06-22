@@ -110,8 +110,8 @@ move_uploaded_file($_FILES["id_photo"]["tmp_name"], $targetPath);</code></pre>
     <ol>
         <li>You need an account, because the upload only happens inside the logged-in
             add-to-cart flow. Use a seeded user (e.g. <code>HUCKER</code> /
-            <code>hucker123</code>) or chain this on top of a credential you stole in the
-            <a href="sqli-union.php">UNION SQLi</a> lab.</li>
+            <code>hucker123</code>) or chain this on top of a credential you stole (as it gonna be in the 
+            <a href="chain-web-shell.php">chain web shell</a> lab).</li>
         <li>Pick an <strong>alcohol</strong> product so the ID-photo branch fires (the
             automated script uses product id <code>77</code>).</li>
         <li>Get a file that the server will execute as PHP into <code>uploaded_ID/</code>
